@@ -1,0 +1,19 @@
+org: snowcait
+app: tweet-album
+service: tweet-album
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  region: ap-northeast-1
+  runtime: nodejs18.x
+  memorySize: 128
+  architecture: arm64
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - httpApi:
+          path: /
+          method: get
