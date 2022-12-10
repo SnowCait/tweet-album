@@ -29,8 +29,8 @@ window.addEventListener('DOMContentLoaded', async event => {
 });
 
 function authorize() {
-  const state = chance.string({ length: 10, alpha: true, numeric: true });
-  const verifier = chance.string({ length: 43, alpha: true, numeric: true });
+  const state = randomString(10);
+  const verifier = randomString(43);
   const authorizeUrl = twitter.constructAuthorizeUrl(state, verifier);
   console.log('[authorize URL]', authorizeUrl);
 
@@ -57,4 +57,8 @@ async function fetchAndSaveAccessToken(newState, code) {
 
 function DeleteURLSearchParams() {
   history.pushState(null, '', location.origin + location.pathname);
+}
+
+function randomString(length) {
+  return chance.string({ length, pool: '0123456789abcdef' });
 }
