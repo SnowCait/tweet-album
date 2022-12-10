@@ -19,6 +19,17 @@ provider:
             - secretsmanager:GetSecretValue
           Resource:
             - '*'
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:Query
+          Resource:
+            - Fn::GetAtt: [ UsersTable, Arn ]
+  environment:
+    NODE_OPTIONS: --experimental-fetch
+    users_table:
+      Ref: UsersTable
 
 functions:
   hello:
@@ -33,3 +44,20 @@ functions:
       - httpApi:
           method: POST
           path: /auth
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-users-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: twitterUserId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: twitterUserId
+            KeyType: HASH
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
