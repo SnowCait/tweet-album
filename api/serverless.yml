@@ -9,6 +9,16 @@ provider:
   runtime: nodejs18.x
   memorySize: 128
   architecture: arm64
+  httpApi:
+    cors: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          Resource:
+            - '*'
 
 functions:
   hello:
@@ -17,3 +27,9 @@ functions:
       - httpApi:
           path: /
           method: get
+  auth:
+    handler: handler.auth
+    events:
+      - httpApi:
+          method: POST
+          path: /auth

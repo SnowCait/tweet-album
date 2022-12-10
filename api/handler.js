@@ -1,4 +1,10 @@
-"use strict";
+'use strict';
+
+// AWS SDK
+const region = 'ap-northeast-1';
+
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const secretsManager = new SecretsManagerClient({ region });
 
 module.exports.hello = async (event) => {
   return {
@@ -11,5 +17,54 @@ module.exports.hello = async (event) => {
       null,
       2
     ),
+  };
+};
+
+module.exports.auth = async event => {
+  console.log('[event]', event);
+
+  const { code, verifier, redirectUrl } = JSON.parse(event.body);
+
+  // Client Secret
+  const secrets = await secretsManager.send(new GetSecretValueCommand({
+    SecretId: 'TweetAlbum',
+  }));
+  const {
+    TwitterClientId: clientId,
+    TwitterClientSecret: clientSecret,
+  } = JSON.parse(secrets.SecretString);
+
+  // Access Token
+  const response = await fetch('https://api.twitter.com/2/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUrl,
+      code_verifier: verifier,
+    }),
+  });
+
+  const token = await response.json();
+  const { access_token: accessToken, refresh_token: refreshToken } = token;
+
+  // Me
+  const meResponse = await fetch('https://api.twitter.com/2/users/me', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  const { data: me } = await meResponse.json();
+  console.log('[me]', me);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ ...token, ...me }),
   };
 };
