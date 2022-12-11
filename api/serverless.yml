@@ -78,6 +78,14 @@ functions:
     # events:
     #   - eventBridge:
     #       schedule: rate(1 hour)
+  showAlbum:
+    handler: handler.showAlbum
+    events:
+      - httpApi:
+          method: GET
+          path: /{userId}/albums/{albumId}
+          authorizer:
+            name: twitterAuthorizer
 
 resources:
   Resources:

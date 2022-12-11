@@ -283,3 +283,46 @@ module.exports.updateAlbums = async (event) => {
 
   return { statusCode: 200 };
 };
+
+module.exports.showAlbum = async (event) => {
+  console.log('[event]', event);
+  console.log('[request path parameters]', event.pathParameters);
+
+  const { userId, albumId } = event.pathParameters;
+  const { accessToken } = event.requestContext.authorizer.lambda;
+
+  const { Item: album } = await db.send(new GetCommand({
+    TableName: albumsTable,
+    Key: {
+      twitterUserId: userId,
+      id: Number(albumId),
+    },
+  }));
+  console.log('[album]', album);
+
+  const params = new URLSearchParams();
+  params.append('ids', [...album.tweets])
+  params.append('expansions', 'author_id');
+  params.append('user.fields', 'id,name,profile_image_url,protected,url,username');
+  console.log('[params]', params.toString());
+
+  const response = await fetch(`https://api.twitter.com/2/tweets?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const { data: tweets, includes } = await response.json();
+  console.log('[tweets]', album.tweets.length, tweets.length, tweets);
+  console.log('[includes]', includes);
+
+  const body = JSON.stringify({ tweets, includes });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};
