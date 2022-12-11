@@ -53,6 +53,7 @@ window.addEventListener('DOMContentLoaded', async event => {
   }
 
   await listAlbums(194534641);
+  await showAlbum(194534641, 1670764722135);
 });
 
 function authorize() {
@@ -118,9 +119,42 @@ async function listAlbums(userId) {
   }
 }
 
+async function showAlbum(userId, albumId) {
+  const { tweets } = await fetchAlbm(userId, albumId);
+  const list = document.getElementById('tweets');
+  while (list.firstChild) {
+    list.removeChild(list.firstChild);
+  }
+  for (const tweet of tweets) {
+    const li = document.createElement('li');
+    li.textContent = JSON.stringify(tweet);
+    list.appendChild(li);
+  }
+}
+
 async function fetchAlbms(userId) {
   const response = await fetch(`${apiUrl}/${userId}/albums`, {
     method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('Cannot get albums.');
+  }
+
+  return await response.json();
+}
+
+async function fetchAlbm(userId, albumId) {
+  const authorization = getAuthorizationHeader();
+  if (authorization == null) {
+    throw new Error('Not authorized.');
+  }
+
+  const response = await fetch(`${apiUrl}/${userId}/albums/${albumId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': authorization,
+    },
   });
 
   if (!response.ok) {
