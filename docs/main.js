@@ -49,6 +49,8 @@ window.addEventListener('DOMContentLoaded', async event => {
     await fetchAndSaveAccessToken(newState, code);
     DeleteURLSearchParams();
   }
+
+  await listAlbums(194534641);
 });
 
 function authorize() {
@@ -96,6 +98,28 @@ async function createAlbum(keyword) {
 
   if (!response.ok) {
     throw new Error('Cannot create album.');
+  }
+
+  return await response.json();
+}
+
+async function listAlbums(userId) {
+  const { albums } = await fetchAlbms(userId);
+  const albumsList = document.getElementById('albums');
+  for (const album of albums) {
+    const li = document.createElement('li');
+    li.textContent = JSON.stringify(album);
+    albumsList.appendChild(li);
+  }
+}
+
+async function fetchAlbms(userId) {
+  const response = await fetch(`${apiUrl}/${userId}/albums`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('Cannot get albums.');
   }
 
   return await response.json();

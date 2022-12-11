@@ -7,7 +7,7 @@ const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client
 const secretsManager = new SecretsManagerClient({ region });
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 const dynamoDB = new DynamoDBClient({ region });
 const db = DynamoDBDocumentClient.from(dynamoDB);
 
@@ -130,10 +130,39 @@ module.exports.saveAlbum = async (event) => {
     },
   }));
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      id,
-    }),
-  };
+  const body = JSON.stringify({
+    id,
+  });
+  console.log('[response body]', body);
+
+  return { statusCode: 200, body };
+};
+
+module.exports.listAlbums = async (event) => {
+  console.log('[event]', event);
+  console.log('[request path parameters]', event.pathParameters);
+
+  const { userId } = event.pathParameters;
+
+  const {
+    Items: albums,
+    Count: count,
+    ScannedCount: scannedCount
+  } = await db.send(new QueryCommand({
+    TableName: albumsTable,
+    KeyConditionExpression: 'twitterUserId = :twitterUserId',
+    ExpressionAttributeValues: {
+      ':twitterUserId': userId,
+    },
+    ScanIndexForward: false,
+    Limit: 50,
+  }));
+  console.log('[albums]', count, scannedCount, albums);
+
+  const body = JSON.stringify({
+    albums,
+  });
+  console.log('[response body]', body);
+
+  return { statusCode: 200, body };
 };

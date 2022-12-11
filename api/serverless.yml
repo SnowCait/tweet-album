@@ -57,7 +57,7 @@ functions:
       - httpApi:
           method: POST
           path: /auth
-  album:
+  saveAlbum:
     handler: handler.saveAlbum
     events:
       - httpApi:
@@ -65,6 +65,12 @@ functions:
           path: /albums
           authorizer:
             name: twitterAuthorizer
+  listAlbums:
+    handler: handler.listAlbums
+    events:
+      - httpApi:
+          method: GET
+          path: /{userId}/albums
 
 resources:
   Resources:
