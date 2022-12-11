@@ -31,7 +31,9 @@ provider:
           Action:
             - dynamodb:GetItem
             - dynamodb:PutItem
+            - dynamodb:UpdateItem
             - dynamodb:Query
+            - dynamodb:Scan
           Resource:
             - Fn::GetAtt: [ UsersTable, Arn ]
             - Fn::GetAtt: [ AlbumsTable, Arn ]
@@ -71,6 +73,11 @@ functions:
       - httpApi:
           method: GET
           path: /{userId}/albums
+  updateAlbums:
+    handler: handler.updateAlbums
+    # events:
+    #   - eventBridge:
+    #       schedule: rate(1 hour)
 
 resources:
   Resources:

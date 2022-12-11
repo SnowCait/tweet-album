@@ -7,7 +7,7 @@ const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client
 const secretsManager = new SecretsManagerClient({ region });
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 const dynamoDB = new DynamoDBClient({ region });
 const db = DynamoDBDocumentClient.from(dynamoDB);
 
@@ -165,4 +165,96 @@ module.exports.listAlbums = async (event) => {
   console.log('[response body]', body);
 
   return { statusCode: 200, body };
+};
+
+module.exports.updateAlbums = async (event) => {
+  console.log('[event]', event);
+
+  const { Items: users } = await db.send(new ScanCommand({
+    TableName: usersTable,
+  }));
+  console.log('[users]', users);
+
+  const {
+    Items: allAlbums,
+    Count: count,
+    ScannedCount: scannedCount
+  } = await db.send(new ScanCommand({
+    TableName: albumsTable,
+  }));
+  console.log('[albums]', count, scannedCount, allAlbums);
+
+  let userAlbums = new Map();
+  for (const album of allAlbums) {
+    const list = userAlbums.get(album.twitterUserId);
+    if (list) {
+      list.push(album);
+    } else {
+      userAlbums.set(album.twitterUserId, [album]);
+    }
+  }
+  console.log('[user albums]', userAlbums);
+
+  for (const user of users) {
+    console.log('[user]', user);
+
+    const { twitterUserId: userId, twitterAccessToken: accessToken, lastTweetId } = user;
+
+    const keywords = userAlbums.get(userId);
+    if (keywords === undefined) {
+      console.log('[no keywords]');
+      continue;
+    }
+
+    const params = new URLSearchParams();
+    params.append('exclude', 'retweets,replies')
+    params.append('expansions', 'author_id');
+    params.append('max_results', 100);
+    if (lastTweetId) {
+      params.append('since_id', lastTweetId);
+    }
+    console.log('[params]', params.toString());
+
+    const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!tweetsResponse.ok) {
+      throw new Error(await tweetsResponse.text());
+    }
+
+    const { data: tweets } = await tweetsResponse.json();
+    console.log('[tweets]', tweets.length, tweets);
+
+    for (const tweet of tweets) {
+      console.log('[tweet]', tweet);
+      const { text } = tweet;
+      for (const { keyword } of keywords) {
+        if (text.includes(keyword)) {
+          console.log('[match]');
+          // TODO: save
+        }
+      }
+    }
+
+    const tweetId = tweets.at(0).id;
+    console.log('[last tweet id]', tweetId);
+
+    await db.send(new UpdateCommand({
+      TableName: usersTable,
+      Key: {
+        twitterUserId: userId,
+      },
+      UpdateExpression: 'SET lastTweetId = :lastTweetId',
+      ExpressionAttributeValues: {
+        ':lastTweetId': tweetId,
+      },
+    }));
+  }
+
+  return { statusCode: 200 };
 };
