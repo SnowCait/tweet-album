@@ -75,9 +75,9 @@ functions:
           path: /{userId}/albums
   updateAlbums:
     handler: handler.updateAlbums
-    # events:
-    #   - eventBridge:
-    #       schedule: rate(1 hour)
+    events:
+      - eventBridge:
+          schedule: rate(1 hour)
   showAlbum:
     handler: handler.showAlbum
     events:
