@@ -11,6 +11,14 @@ provider:
   architecture: arm64
   httpApi:
     cors: true
+    authorizers:
+      twitterAuthorizer:
+        type: request
+        functionName: authorizer
+        enableSimpleResponses: true
+        resultTtlInSeconds: 3600
+        identitySource:
+          - $request.header.Authorization
   iam:
     role:
       statements:
@@ -26,12 +34,17 @@ provider:
             - dynamodb:Query
           Resource:
             - Fn::GetAtt: [ UsersTable, Arn ]
+            - Fn::GetAtt: [ AlbumsTable, Arn ]
   environment:
     NODE_OPTIONS: --experimental-fetch
     users_table:
       Ref: UsersTable
+    albums_table:
+      Ref: AlbumsTable
 
 functions:
+  authorizer:
+    handler: handler.authorizer
   hello:
     handler: handler.hello
     events:
@@ -44,6 +57,14 @@ functions:
       - httpApi:
           method: POST
           path: /auth
+  album:
+    handler: handler.saveAlbum
+    events:
+      - httpApi:
+          method: POST
+          path: /albums
+          authorizer:
+            name: twitterAuthorizer
 
 resources:
   Resources:
@@ -57,6 +78,24 @@ resources:
         KeySchema:
           - AttributeName: twitterUserId
             KeyType: HASH
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    AlbumsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-albums-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: twitterUserId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: twitterUserId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
         BillingMode: PROVISIONED
         ProvisionedThroughput:
           ReadCapacityUnits: 1

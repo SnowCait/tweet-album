@@ -12,12 +12,35 @@ const twitter = new Twitter(clientId, redirectUrl, apiUrl);
 window.addEventListener('DOMContentLoaded', async event => {
   console.log('[DOMContentLoaded]');
 
-  const signin = document.getElementById('signin');
-  signin.addEventListener('click', event => {
+  // Signin
+  document.getElementById('signin').addEventListener('click', event => {
     console.log('[signin.clicked]', event);
     authorize();
   });
 
+  // Album
+  document.getElementById('album').addEventListener('submit', async event => {
+    console.log('[signin.clicked]', event);
+
+    event.preventDefault();
+
+    const { target: form, submitter } = event;
+    submitter.disabled = true;
+    const keyword = form.elements.keyword.value;
+
+    try {
+      const { id } = await createAlbum(keyword);
+      console.log('[album id]', id);
+    } catch (e) {
+      submitter.disabled = false;
+      return;
+    }
+
+    form.reset();
+    submitter.disabled = false;
+  });
+
+  // Auth
   const params = new URLSearchParams(location.search);
   const newState = params.get('state');
   const code = params.get('code');
@@ -53,6 +76,42 @@ async function fetchAndSaveAccessToken(newState, code) {
     console.log('[token]', user);
     localStorage.setItem('user', JSON.stringify(user));
   }
+}
+
+async function createAlbum(keyword) {
+  const authorization = getAuthorizationHeader();
+  if (authorization == null) {
+    throw new Error('Not authorized.');
+  }
+
+  const response = await fetch(`${apiUrl}/albums`, {
+    method: 'POST',
+    headers: {
+      'Authorization': authorization,
+    },
+    body: JSON.stringify({
+      keyword,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Cannot create album.');
+  }
+
+  return await response.json();
+}
+
+function getAuthorizationHeader() {
+  const user = localStorage.getItem('user');
+  console.log('[user]', user);
+
+  if (!user) {
+    console.error('[unauthorized]');
+    return null;
+  }
+
+  const { id: userId, access_token: accessToken } = JSON.parse(user);
+  return `${userId}:${accessToken}`;
 }
 
 function DeleteURLSearchParams() {
