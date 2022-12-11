@@ -38,6 +38,8 @@ window.addEventListener('DOMContentLoaded', async event => {
 
     form.reset();
     submitter.disabled = false;
+
+    await listAlbums(194534641);
   });
 
   // Auth
@@ -105,11 +107,14 @@ async function createAlbum(keyword) {
 
 async function listAlbums(userId) {
   const { albums } = await fetchAlbms(userId);
-  const albumsList = document.getElementById('albums');
+  const list = document.getElementById('albums');
+  while (list.firstChild) {
+    list.removeChild(list.firstChild);
+  }
   for (const album of albums) {
     const li = document.createElement('li');
     li.textContent = JSON.stringify(album);
-    albumsList.appendChild(li);
+    list.appendChild(li);
   }
 }
 
