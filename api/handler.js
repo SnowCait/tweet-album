@@ -55,6 +55,7 @@ module.exports.hello = async (event) => {
 
 module.exports.auth = async event => {
   console.log('[event]', event);
+  console.log('[request body]', event.body);
 
   const { code, verifier, redirectUrl } = JSON.parse(event.body);
 
@@ -90,8 +91,13 @@ module.exports.auth = async event => {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
     },
   });
+
+  if (!meResponse.ok) {
+    throw new Error(await meResponse.text());
+  }
 
   const { data: me } = await meResponse.json();
   console.log('[me]', me);
@@ -106,10 +112,9 @@ module.exports.auth = async event => {
     },
   }));
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ ...token, ...me }),
-  };
+  const body = JSON.stringify({ ...token, ...me });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
 };
 
 module.exports.saveAlbum = async (event) => {
@@ -130,11 +135,8 @@ module.exports.saveAlbum = async (event) => {
     },
   }));
 
-  const body = JSON.stringify({
-    id,
-  });
+  const body = JSON.stringify({ id });
   console.log('[response body]', body);
-
   return { statusCode: 200, body };
 };
 
@@ -159,11 +161,8 @@ module.exports.listAlbums = async (event) => {
   }));
   console.log('[albums]', count, scannedCount, albums);
 
-  const body = JSON.stringify({
-    albums,
-  });
+  const body = JSON.stringify({ albums });
   console.log('[response body]', body);
-
   return { statusCode: 200, body };
 };
 
