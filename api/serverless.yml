@@ -59,8 +59,8 @@ functions:
       - httpApi:
           method: POST
           path: /auth
-  saveAlbum:
-    handler: handler.saveAlbum
+  createAlbum:
+    handler: handler.createAlbum
     events:
       - httpApi:
           method: POST

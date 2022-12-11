@@ -117,7 +117,7 @@ module.exports.auth = async event => {
   return { statusCode: 200, body };
 };
 
-module.exports.saveAlbum = async (event) => {
+module.exports.createAlbum = async (event) => {
   console.log('[event]', event);
   console.log('[request body]', event.body);
 
@@ -229,19 +229,45 @@ module.exports.updateAlbums = async (event) => {
     const { data: tweets } = await tweetsResponse.json();
     console.log('[tweets]', tweets.length, tweets);
 
+    if (tweets.length === 0) {
+      continue;
+    }
+
+    let newAlbumTweets = new Map();
+
     for (const tweet of tweets) {
       console.log('[tweet]', tweet);
-      const { text } = tweet;
-      for (const { keyword } of keywords) {
+      const { id: tweetId, text } = tweet;
+      for (const { id: albumId, keyword } of keywords) {
         if (text.includes(keyword)) {
-          console.log('[match]');
-          // TODO: save
+          console.log('[match]', albumId, tweet);
+          const list = newAlbumTweets.get(albumId);
+          if (list) {
+            list.append(tweetId);
+          } else {
+            newAlbumTweets.set(albumId, [tweetId]);
+          }
         }
       }
     }
 
-    const tweetId = tweets.at(0).id;
-    console.log('[last tweet id]', tweetId);
+    for (const [ albumId, albumTweets ] of newAlbumTweets) {
+      console.log('[album tweets]', albumTweets);
+      await db.send(new UpdateCommand({
+        TableName: albumsTable,
+        Key: {
+          twitterUserId: userId,
+          id: albumId,
+        },
+        UpdateExpression: 'ADD tweets :tweets',
+        ExpressionAttributeValues: {
+          ':tweets': new Set(albumTweets),
+        },
+      }));
+    }
+
+    const newestTweetId = tweets.at(0).id;
+    console.log('[last tweet id]', newestTweetId);
 
     await db.send(new UpdateCommand({
       TableName: usersTable,
@@ -250,7 +276,7 @@ module.exports.updateAlbums = async (event) => {
       },
       UpdateExpression: 'SET lastTweetId = :lastTweetId',
       ExpressionAttributeValues: {
-        ':lastTweetId': tweetId,
+        ':lastTweetId': newestTweetId,
       },
     }));
   }
