@@ -17,7 +17,7 @@ const {
 export const authorizer = async event => {
   console.log('[event]', event);
 
-  const [ userId, accessToken ] = event.headers.authorization.split(':');
+  const [ userId, authorizationAccessToken ] = event.headers.authorization.split(':');
 
   const { Item: user } = await db.send(new GetCommand({
     TableName: usersTable,
@@ -27,13 +27,41 @@ export const authorizer = async event => {
   }));
   console.log('[user]', user);
 
-  return {
-    isAuthorized: accessToken === user?.twitterAccessToken,
+  if (!user) {
+    return { isAuthorized: false };
+  }
+
+  const isAuthorized = (authorizationAccessToken === user.authorizationAccessToken);
+  let accessToken = authorizationAccessToken;
+  let tokens = null;
+
+  // Expired by user
+  if (user.expirationTime < Date.now()) {
+    tokens = await refreshingToken(user.twitterRefreshToken, userId);
+  }
+
+  // Expired by system
+  if (user.twitterAccessToken !== user.authorizationAccessToken) {
+    await db.send(new UpdateCommand({
+      TableName: usersTable,
+      Key: {
+        twitterUserId: userId,
+      },
+      UpdateExpression: 'SET authorizationAccessToken = twitterAccessToken',
+    }));
+    accessToken = user.twitterAccessToken;
+  }
+
+  const response = {
+    isAuthorized,
     context: {
       userId,
       accessToken,
+      tokens,
     },
-  }
+  };
+  console.log('[response]', response);
+  return response;
 };
 
 export const hello = async event => {
@@ -85,7 +113,11 @@ export const auth = async event => {
   });
 
   const token = await response.json();
-  const { access_token: accessToken, refresh_token: refreshToken } = token;
+  const {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: expiresIn,
+  } = token;
 
   // Me
   const meResponse = await fetch('https://api.twitter.com/2/users/me', {
@@ -114,12 +146,15 @@ export const auth = async event => {
       'twitterName = :name',
       'twitterAccessToken = :accessToken',
       'twitterRefreshToken = :refreshToken',
+      'authorizationAccessToken = :accessToken',
+      'expirationTime = :expirationTime',
     ].join(', '),
     ExpressionAttributeValues: {
       ':screenName': me.username,
       ':name': me.name,
       ':accessToken': accessToken,
       ':refreshToken': refreshToken,
+      ':expirationTime': Date.now() + expiresIn * 1000,
     },
   }));
 
@@ -215,7 +250,17 @@ export const updateAlbums = async event => {
   for (const user of users) {
     console.log('[user]', user);
 
-    const { twitterUserId: userId, twitterAccessToken: accessToken, lastTweetId } = user;
+    const {
+      twitterUserId: userId,
+      twitterAccessToken: accessToken,
+      twitterRefreshToken,
+      expirationTime,
+      lastTweetId,
+    } = user;
+
+    if (expirationTime < Date.now()) {
+      await refreshingToken(twitterRefreshToken, userId);
+    }
 
     const keywords = userAlbums.get(userId);
     if (keywords === undefined) {
@@ -307,7 +352,7 @@ export const showAlbum = async event => {
   console.log('[request path parameters]', event.pathParameters);
 
   const { userId, albumId } = event.pathParameters;
-  const { accessToken } = event.requestContext.authorizer.lambda;
+  const { accessToken, tokens } = event.requestContext.authorizer.lambda;
 
   const { Item: album } = await db.send(new GetCommand({
     TableName: albumsTable,
@@ -326,7 +371,9 @@ export const showAlbum = async event => {
 
   const params = new URLSearchParams();
   params.append('ids', [...album.tweets])
-  params.append('expansions', 'author_id');
+  params.append('expansions', 'author_id,attachments.media_keys');
+  params.append('media.fields', 'preview_image_url');
+  params.append('tweet.fields', 'text');
   params.append('user.fields', 'id,name,profile_image_url,protected,url,username');
   console.log('[params]', params.toString());
 
@@ -346,7 +393,7 @@ export const showAlbum = async event => {
   console.log('[tweets]', album.tweets.length, tweets.length, tweets);
   console.log('[includes]', includes);
 
-  const body = JSON.stringify({ tweets, includes });
+  const body = JSON.stringify({ tweets, includes, tokens });
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
@@ -378,3 +425,57 @@ export const deleteAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+async function refreshingToken(refreshToken, userId) {
+  console.log('[refresh token]', refreshToken);
+
+  // Client Secret
+  const secrets = await secretsManager.send(new GetSecretValueCommand({
+    SecretId: 'TweetAlbum',
+  }));
+  const {
+    TwitterClientId: clientId, TwitterClientSecret: clientSecret,
+  } = JSON.parse(secrets.SecretString);
+
+  // Refresh token
+  const response = await fetch('https://api.twitter.com/2/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const tokens = await response.json();
+  console.log('[tokens]', tokens);
+  const {
+    access_token: newAccessToken,
+    refresh_token: newRefreshToken,
+    expires_in: expiresIn,
+  } = tokens;
+
+  // Save
+  await db.send(new UpdateCommand({
+    TableName: usersTable,
+    Key: {
+      twitterUserId: userId,
+    },
+    UpdateExpression: 'SET twitterAccessToken = :accessToken, twitterRefreshToken = :refreshToken, expirationTime = :expirationTime',
+    ExpressionAttributeValues: {
+      ':accessToken': newAccessToken,
+      ':refreshToken': newRefreshToken,
+      ':expirationTime': Date.now() + expiresIn * 1000,
+    },
+  }));
+
+  return tokens;
+}
+
