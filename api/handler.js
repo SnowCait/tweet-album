@@ -3,9 +3,6 @@
 // AWS SDK
 const region = 'ap-northeast-1';
 
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-const secretsManager = new SecretsManagerClient({ region });
-
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 const dynamoDB = new DynamoDBClient({ region });
@@ -13,6 +10,8 @@ const db = DynamoDBDocumentClient.from(dynamoDB);
 
 // Environment variables
 const {
+  AWS_SESSION_TOKEN: awsSessionToken,
+  secret_id: secretId,
   users_table: usersTable,
   albums_table: albumsTable,
 } = process.env;
@@ -60,9 +59,13 @@ module.exports.auth = async event => {
   const { code, verifier, redirectUrl } = JSON.parse(event.body);
 
   // Client Secret
-  const secrets = await secretsManager.send(new GetSecretValueCommand({
-    SecretId: 'TweetAlbum',
-  }));
+  const secretsResponse = await fetch(`http://localhost:2773/secretsmanager/get?secretId=${secretId}`, {
+    method: 'GET',
+    headers: {
+      'X-Aws-Parameters-Secrets-Token': awsSessionToken,
+    },
+  });
+  const secrets = await secretsResponse.json();
   const {
     TwitterClientId: clientId,
     TwitterClientSecret: clientSecret,
