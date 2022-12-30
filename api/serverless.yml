@@ -1,5 +1,3 @@
-org: snowcait
-app: tweet-album
 service: tweet-album
 frameworkVersion: '3'
 
