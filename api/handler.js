@@ -1,10 +1,8 @@
-'use strict';
-
 // AWS SDK
 const region = 'ap-northeast-1';
 
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 const dynamoDB = new DynamoDBClient({ region });
 const db = DynamoDBDocumentClient.from(dynamoDB);
 
@@ -16,7 +14,7 @@ const {
   albums_table: albumsTable,
 } = process.env;
 
-module.exports.authorizer = async event => {
+export const authorizer = async event => {
   console.log('[event]', event);
 
   const [ userId, accessToken ] = event.headers.authorization.split(':');
@@ -38,7 +36,7 @@ module.exports.authorizer = async event => {
   }
 };
 
-module.exports.hello = async (event) => {
+export const hello = async event => {
   return {
     statusCode: 200,
     body: JSON.stringify(
@@ -52,7 +50,7 @@ module.exports.hello = async (event) => {
   };
 };
 
-module.exports.auth = async event => {
+export const auth = async event => {
   console.log('[event]', event);
   console.log('[request body]', event.body);
 
@@ -120,7 +118,7 @@ module.exports.auth = async event => {
   return { statusCode: 200, body };
 };
 
-module.exports.createAlbum = async (event) => {
+export const createAlbum = async event => {
   console.log('[event]', event);
   console.log('[request body]', event.body);
 
@@ -143,7 +141,7 @@ module.exports.createAlbum = async (event) => {
   return { statusCode: 200, body };
 };
 
-module.exports.listAlbums = async (event) => {
+export const listAlbums = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
 
@@ -169,7 +167,7 @@ module.exports.listAlbums = async (event) => {
   return { statusCode: 200, body };
 };
 
-module.exports.updateAlbums = async (event) => {
+export const updateAlbums = async event => {
   console.log('[event]', event);
 
   const { Items: users } = await db.send(new ScanCommand({
@@ -287,7 +285,7 @@ module.exports.updateAlbums = async (event) => {
   return { statusCode: 200 };
 };
 
-module.exports.showAlbum = async (event) => {
+export const showAlbum = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
 
