@@ -4,7 +4,7 @@ import router from '../router'
 
 const apiUrl = 'https://lmgo2fuffa.execute-api.ap-northeast-1.amazonaws.com';
 const clientId = 'dFdQakVfTUJsZzU1eDdZU1A4U2w6MTpjaQ';
-const redirectUrl = location.origin + import.meta.env.BASE_URL + 'authorized';
+const redirectUrl = location.origin + import.meta.env.BASE_URL;
 console.log('[redirect URL]', redirectUrl);
 
 const twitter = new Twitter(clientId, redirectUrl, apiUrl);
@@ -43,12 +43,6 @@ async function fetchAndSaveAccessToken(newState, code) {
 </script>
 
 <template>
-  <div class="authorized">
-    <h1 class="green">Authorized</h1>
-    <h3>
-      Fetching access token and will be redirected to home.
-    </h3>
-  </div>
 </template>
 
 <style scoped>

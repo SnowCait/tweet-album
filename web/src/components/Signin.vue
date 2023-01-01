@@ -4,7 +4,7 @@ import { Twitter } from './twitter.js';
 console.log('[base url]', import.meta.env.BASE_URL);
 const apiUrl = 'https://lmgo2fuffa.execute-api.ap-northeast-1.amazonaws.com';
 const clientId = 'dFdQakVfTUJsZzU1eDdZU1A4U2w6MTpjaQ';
-const redirectUrl = location.origin + import.meta.env.BASE_URL + 'authorized';
+const redirectUrl = location.origin + import.meta.env.BASE_URL;
 console.log('[redirect URL]', redirectUrl);
 
 const twitter = new Twitter(clientId, redirectUrl, apiUrl);

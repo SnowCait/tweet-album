@@ -2,6 +2,7 @@
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
 import Signin from './components/Signin.vue';
+import Authorized from './components/Authorized.vue'
 </script>
 
 <template>
@@ -17,6 +18,7 @@ import Signin from './components/Signin.vue';
       </nav>
 
       <Signin />
+      <Authorized />
     </div>
   </header>
 
