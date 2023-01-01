@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy web
 
 on:
   push:
     branches:
-      - vue
+      - main
   workflow_dispatch:
 
 permissions:
