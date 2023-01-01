@@ -1,4 +1,5 @@
 <script setup>
+import AlbumDelete from '../components/AlbumDelete.vue'
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -26,7 +27,13 @@ async function fetchAlbums(userId) {
     <h2>アルバム一覧</h2>
     <ul id="albums">
       <ul v-for="album in albums">
-        <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.id }}</RouterLink>
+        <div v-if="!album.deletionTime">
+          <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.title ?? album.id }}</RouterLink>
+          <AlbumDelete :album="album" />
+        </div>
+        <div v-else="album.deletionTime">
+          {{ album.title ?? album.id }}
+        </div>
       </ul>
     </ul>
   </section>

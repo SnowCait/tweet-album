@@ -1,27 +1,23 @@
 <script setup>
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
-import router from '../router';
+
+const props = defineProps({
+  album: {
+    type: Object,
+    required: true,
+  },
+});
 
 const apiUrl = API_URL;
-const { userId } = useRoute().params;
-const keyword = ref('');
 const disabled = ref(false);
 
 const onSubmit = async _ => {
   disabled.value = true;
 
   try {
-    const { id } = await createAlbum(keyword.value);
-    console.log('[album id]', id);
-    keyword.value = '';
-    router.push({
-      name: 'album',
-      params: {
-        userId,
-        albumId: id,
-      },
-    });
+    const { deletionTime } = await deleteAlbum(props.album.id);
+    console.log('[deletion time]', deletionTime);
+    props.album.deletionTime = deletionTime;
   } catch (e) {
     console.error(e);
   } finally {
@@ -42,24 +38,21 @@ function getAuthorizationHeader() {
   return `${userId}:${accessToken}`;
 }
 
-async function createAlbum(keyword) {
+async function deleteAlbum(albumId) {
   const authorization = getAuthorizationHeader();
   if (authorization == null) {
     throw new Error('Not authorized.');
   }
 
-  const response = await fetch(`${apiUrl}/albums`, {
-    method: 'POST',
+  const response = await fetch(`${apiUrl}/albums/${albumId}`, {
+    method: 'DELETE',
     headers: {
       'Authorization': authorization,
     },
-    body: JSON.stringify({
-      keyword,
-    }),
   });
 
   if (!response.ok) {
-    throw new Error('Cannot create album.');
+    throw new Error('Cannot delete album.');
   }
 
   return await response.json();
@@ -67,13 +60,9 @@ async function createAlbum(keyword) {
 </script>
 
 <template>
-  <section>
-    <h2>アルバム作成</h2>
-    <form @submit.prevent="onSubmit">
-      <input type="text" v-model="keyword" placeholder="キーワード" required>
-      <input type="submit" value="作成" :disabled="disabled">
-    </form>
-  </section>
+  <form @submit.prevent="onSubmit">
+    <input type="submit" value="🗑️" :disabled="disabled" />
+  </form>
 </template>
 
 <style scoped>
