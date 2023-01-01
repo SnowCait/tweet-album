@@ -1,10 +1,11 @@
 <script setup>
+import AlbumTweets from '../components/AlbumTweets.vue'
 </script>
 
 <template>
   <div class="album">
     <main>
-      <h1>{{ $route.params.userId }} のアルバム {{ $route.params.albumId }}</h1>
+      <AlbumTweets />
     </main>
   </div>
 </template>
