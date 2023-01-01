@@ -142,6 +142,7 @@ export const createAlbum = async event => {
     Item: {
       twitterUserId: userId,
       id,
+      title: keyword,
       keyword,
     },
   }));
