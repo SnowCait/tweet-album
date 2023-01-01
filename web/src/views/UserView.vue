@@ -1,4 +1,5 @@
 <script setup>
+import AlbumCreate from '../components/AlbumCreate.vue'
 import AlbumList from '../components/AlbumList.vue'
 </script>
 
@@ -6,6 +7,7 @@ import AlbumList from '../components/AlbumList.vue'
   <div class="album">
     <main>
       <h1>{{ $route.params.userId }} のアルバム</h1>
+      <AlbumCreate />
       <AlbumList />
     </main>
   </div>
