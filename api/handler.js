@@ -350,3 +350,31 @@ export const showAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+export const deleteAlbum = async event => {
+  console.log('[event]', event);
+  console.log('[request path parameters]', event.pathParameters);
+
+  const { albumId } = event.pathParameters;
+  const { userId } = event.requestContext.authorizer.lambda;
+
+  const deletesIn = 24 * 60 * 60;
+  const now = Math.floor(Date.now() / 1000);
+  const deletionTime = now + deletesIn;
+
+  await db.send(new UpdateCommand({
+    TableName: albumsTable,
+    Key: {
+      twitterUserId: userId,
+      id: Number(albumId),
+    },
+    UpdateExpression: 'SET deletionTime = :deletionTime',
+    ExpressionAttributeValues: {
+      ':deletionTime': deletionTime,
+    },
+  }));
+
+  const body = JSON.stringify({ deletionTime });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};

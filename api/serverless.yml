@@ -87,6 +87,14 @@ functions:
           path: /{userId}/albums/{albumId}
           authorizer:
             name: twitterAuthorizer
+  deleteAlbum:
+    handler: handler.deleteAlbum
+    events:
+      - httpApi:
+          method: DELETE
+          path: /albums/{albumId}
+          authorizer:
+            name: twitterAuthorizer
 
 resources:
   Resources:
@@ -118,6 +126,9 @@ resources:
             KeyType: HASH
           - AttributeName: id
             KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: deletionTime
+          Enabled: true
         BillingMode: PROVISIONED
         ProvisionedThroughput:
           ReadCapacityUnits: 1
