@@ -18,7 +18,22 @@ async function run() {
   if (newState && code) {
     console.log('[params]', newState, code);
     await fetchAndSaveAccessToken(newState, code);
-    router.push('/');
+
+    const user = localStorage.getItem('user');
+    console.log('[user]', user);
+
+    if (!user) {
+      console.error('[unauthorized]');
+      return;
+    }
+
+    const { id: userId } = JSON.parse(user);
+    router.push({
+      name: 'user',
+      params: {
+        userId,
+      },
+    });
   }
 }
 
