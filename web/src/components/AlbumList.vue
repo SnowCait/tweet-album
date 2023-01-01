@@ -1,29 +1,13 @@
 <script setup>
+import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const apiUrl = API_URL;
 const { userId } = useRoute().params;
-listAlbums(userId);
+const albums = ref([]);
+fetchAlbums(userId);
 
-async function listAlbums(userId) {
-  const { albums } = await fetchAlbms(userId);
-  console.table(albums);
-  const list = document.getElementById('albums');
-  console.log(list);
-  if (albums.length === 0) {
-    console.warn('Albums are not found.')
-  }
-  while (list.firstChild) {
-    list.removeChild(list.firstChild);
-  }
-  for (const album of albums) {
-    const li = document.createElement('li');
-    li.textContent = JSON.stringify(album);
-    list.appendChild(li);
-  }
-}
-
-async function fetchAlbms(userId) {
+async function fetchAlbums(userId) {
   const response = await fetch(`${apiUrl}/${userId}/albums`, {
     method: 'GET',
   });
@@ -32,14 +16,19 @@ async function fetchAlbms(userId) {
     throw new Error('Cannot get albums.');
   }
 
-  return await response.json();
+  const data = await response.json();
+  albums.value = data.albums;
 }
 </script>
 
 <template>
   <section>
     <h2>アルバム一覧</h2>
-    <ul id="albums"></ul>
+    <ul id="albums">
+      <ul v-for="album in albums">
+        <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.id }}</RouterLink>
+      </ul>
+    </ul>
   </section>
 </template>
 
