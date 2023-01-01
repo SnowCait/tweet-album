@@ -9,6 +9,9 @@ on:
       - api/**
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}
+
 jobs:
   deploy:
     runs-on: ubuntu-22.04
