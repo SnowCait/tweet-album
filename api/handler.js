@@ -162,7 +162,13 @@ export const listAlbums = async event => {
   }));
   console.log('[albums]', count, scannedCount, albums);
 
-  const body = JSON.stringify({ albums });
+  const body = JSON.stringify({ albums }, (k, v) => {
+    if (v instanceof Set) {
+      return [...v];
+    } else {
+      return v;
+    }
+  });
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
