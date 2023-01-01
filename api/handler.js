@@ -104,12 +104,22 @@ export const auth = async event => {
   console.log('[me]', me);
 
   // Save
-  await db.send(new PutCommand({
+  await db.send(new UpdateCommand({
     TableName: usersTable,
-    Item: {
+    Key: {
       twitterUserId: me.id,
-      twitterAccessToken: accessToken,
-      twitterRefreshToken: refreshToken,
+    },
+    UpdateExpression: [
+      'SET twitterScreenName = :screenName',
+      'twitterName = :name',
+      'twitterAccessToken = :accessToken',
+      'twitterRefreshToken = :refreshToken',
+    ].join(', '),
+    ExpressionAttributeValues: {
+      ':screenName': me.username,
+      ':name': me.name,
+      ':accessToken': accessToken,
+      ':refreshToken': refreshToken,
     },
   }));
 
