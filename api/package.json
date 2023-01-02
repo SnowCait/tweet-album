@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
-    "@octokit/auth-app": "^4.0.7"
+    "@octokit/auth-app": "^4.0.7",
+    "octokit": "^2.0.10"
   }
 }
