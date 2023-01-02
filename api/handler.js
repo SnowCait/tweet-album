@@ -332,19 +332,7 @@ export const updateAlbums = async event => {
       }));
     }
 
-    const newestTweetId = tweets.at(0).id;
-    console.log('[last tweet id]', newestTweetId);
-
-    await db.send(new UpdateCommand({
-      TableName: usersTable,
-      Key: {
-        twitterUserId: userId,
-      },
-      UpdateExpression: 'SET lastTweetId = :lastTweetId',
-      ExpressionAttributeValues: {
-        ':lastTweetId': newestTweetId,
-      },
-    }));
+    await updateLastTweetId(userId, tweets.at(0).id);
   }
 
   return { statusCode: 200 };
@@ -428,6 +416,21 @@ export const deleteAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+async function updateLastTweetId(userId, lastTweetId) {
+  console.log('[last tweet id]', lastTweetId);
+
+  await db.send(new UpdateCommand({
+    TableName: usersTable,
+    Key: {
+      twitterUserId: userId,
+    },
+    UpdateExpression: 'SET lastTweetId = :lastTweetId',
+    ExpressionAttributeValues: {
+      ':lastTweetId': lastTweetId,
+    },
+  }));
+}
 
 async function refreshingToken(refreshToken, userId) {
   console.log('[refresh token]', refreshToken);
