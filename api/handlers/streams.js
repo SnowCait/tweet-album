@@ -10,6 +10,7 @@ const db = DynamoDBDocumentClient.from(dynamoDB);
 
 // GitHub App
 import { createAppAuth } from '@octokit/auth-app';
+import { Octokit } from 'octokit';
 
 // Environment variables
 const {
@@ -21,6 +22,27 @@ const {
 export const cacheAlbum = async event => {
   console.log('[event]', JSON.stringify(event));
 
+  const {
+    GitHubAppId: appId,
+    GitHubAppPem: pem,
+    GitHubAppInstallationId: installationId,
+  } = await getSecrets();
+
+  const octokit = new Octokit({
+    authStrategy: createAppAuth,
+    auth: {
+      appId,
+      privateKey: Buffer.from(pem, 'base64').toString(),
+      installationId,
+    },
+  });
+
+  const repository = {
+    owner: 'SnowCait',
+    repo: 'tweet-album',
+  };
+  const branchName = 'main';
+
   for (const { eventID, eventName, dynamodb } of event.Records) {
     console.log('[event id]', eventID);
     if (eventName !== 'MODIFY') {
@@ -28,11 +50,9 @@ export const cacheAlbum = async event => {
       continue;
     }
 
-    const newRecord = unmarshall(dynamodb.NewImage);
-    const oldRecord = unmarshall(dynamodb.OldImage);
-    console.log(newRecord, oldRecord);
-    const { twitterUserId, tweets: newTweets } = newRecord;
-    const { tweets: oldTweets } = oldRecord;
+    const { twitterUserId: userId, id: albumId} = unmarshall(dynamodb.Keys);
+    const { tweets: newTweets } = unmarshall(dynamodb.NewImage);
+    const { tweets: oldTweets } = unmarshall(dynamodb.OldImage);
 
     if (newTweets === oldTweets) {
       console.log('[up-to-date]');
@@ -42,11 +62,14 @@ export const cacheAlbum = async event => {
     const { Item: user } = await db.send(new GetCommand({
       TableName: usersTable,
       Key: {
-        twitterUserId,
+        twitterUserId: userId,
       },
     }));
 
-    const { twitterAccessToken: accessToken } = user;
+    const {
+      twitterAccessToken: accessToken,
+      twitterScreenName: screenName,
+    } = user;
 
     // Twitter
     const params = new URLSearchParams();
@@ -73,19 +96,42 @@ export const cacheAlbum = async event => {
     console.log('[json]', json);
 
     // GitHub
-    const {
-      GitHubAppId: appId,
-      GitHubAppPem: pem,
-      GitHubAppClientId: clientId,
-      GitHubAppClientSecret: clientSecret,
-    } = await getSecrets();
-    const auth = createAppAuth({
-      appId,
-      privateKey: Buffer.from(pem, 'base64').toString(),
-      clientId,
-      clientSecret,
+    const { data: branch } = await octokit.rest.repos.getBranch({
+      ...repository,
+      branch: branchName,
     });
-    const { token } = await auth({ type: 'app' });
+    console.log('[branch]', branch);
+
+    const { data: tree } = await octokit.rest.git.createTree({
+      ...repository,
+      tree: [
+        {
+          path: `docs/api/${userId}/${albumId}.json`,
+          mode: '100644',
+          type: 'blob',
+          content: json,
+        },
+      ],
+      base_tree: branch.commit.commit.tree.sha,
+    });
+    console.log('[tree]', tree, tree.sha);
+
+    const { data: commit } = await octokit.rest.git.createCommit({
+      ...repository,
+      message: `@${screenName}`,
+      tree: tree.sha,
+      parents: [
+        branch.commit.sha,
+      ],
+    });
+    console.log('[commit]', commit, commit.sha);
+
+    const { data: ref } = await octokit.rest.git.updateRef({
+      ...repository,
+      ref: `heads/${branchName}`,
+      sha: commit.sha,
+    });
+    console.log('[ref]', ref, ref.sha);
   }
 };
 
