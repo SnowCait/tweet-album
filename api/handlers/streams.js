@@ -51,7 +51,7 @@ export const cacheAlbum = async event => {
     }
 
     const { twitterUserId: userId, id: albumId} = unmarshall(dynamodb.Keys);
-    const { tweets: newTweets } = unmarshall(dynamodb.NewImage);
+    const { tweets: newTweets, title } = unmarshall(dynamodb.NewImage);
     const { tweets: oldTweets } = unmarshall(dynamodb.OldImage);
 
     if (newTweets === oldTweets) {
@@ -124,7 +124,7 @@ export const cacheAlbum = async event => {
 
     const { data: commit } = await octokit.rest.git.createCommit({
       ...repository,
-      message: `@${screenName}`,
+      message: `@${screenName} ${title}`,
       tree: tree.sha,
       parents: [
         branch.commit.sha,
