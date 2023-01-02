@@ -286,10 +286,10 @@ export const updateAlbums = async event => {
       throw new Error(await tweetsResponse.text());
     }
 
-    const { data: tweets } = await tweetsResponse.json();
-    console.log('[tweets]', tweets.length, tweets);
+    const { data: tweets, meta } = await tweetsResponse.json();
+    console.log('[tweets]', tweets, meta);
 
-    if (tweets.length === 0) {
+    if (meta.result_count === 0) {
       continue;
     }
 
@@ -326,7 +326,7 @@ export const updateAlbums = async event => {
       }));
     }
 
-    await updateLastTweetId(userId, tweets.at(0).id);
+    await updateLastTweetId(userId, meta.newest_id);
   }
 
   return { statusCode: 200 };
