@@ -39,7 +39,7 @@ export const cacheAlbum = async event => {
 
   const repository = {
     owner: 'SnowCait',
-    repo: 'tweet-album',
+    repo: 'tweet-album-api',
   };
   const branchName = 'main';
 
