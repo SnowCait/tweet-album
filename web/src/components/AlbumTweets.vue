@@ -7,7 +7,12 @@ const apiUrl = API_URL;
 const { userId, albumId } = useRoute().params;
 const tweets = ref([]);
 const users = ref([]);
-fetchAlbum(userId, albumId);
+
+if (localStorage.getItem('user')) {
+  fetchAlbum(userId, albumId);
+} else {
+  fetchAlbumArchive(userId, albumId);
+}
 
 function getAuthorizationHeader() {
   const user = localStorage.getItem('user');
@@ -42,6 +47,20 @@ async function fetchAlbum(userId, albumId) {
   const data = await response.json();
   console.log('[album]', data);
   tweets.value = data.tweets;
+  users.value = data.includes.users;
+}
+
+async function fetchAlbumArchive(userId, albumId) {
+  const url = 'https://snowcait.github.io/tweet-album-api/api'
+  const response = await fetch(`${url}/${userId}/${albumId}.json`);
+
+  if (!response.ok) {
+    throw new Error('Cannot get albums.');
+  }
+
+  const data = await response.json();
+  console.log('[album archive]', data);
+  tweets.value = data.data;
   users.value = data.includes.users;
 }
 </script>
