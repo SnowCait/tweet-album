@@ -28,11 +28,11 @@ async function fetchAlbums(userId) {
     <ul id="albums">
       <ul v-for="album in albums">
         <div v-if="!album.deletionTime">
-          <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.title ?? album.id }}</RouterLink>
+          <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.title }}</RouterLink>
           <AlbumDelete :album="album" />
         </div>
         <div v-else="album.deletionTime">
-          {{ album.title ?? album.id }}
+          {{ album.title }}
         </div>
       </ul>
     </ul>
