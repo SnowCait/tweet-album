@@ -309,7 +309,7 @@ export const updateAlbums = async event => {
           console.log('[match]', albumId, tweet);
           const list = newAlbumTweets.get(albumId);
           if (list) {
-            list.append(tweetId);
+            list.push(tweetId);
           } else {
             newAlbumTweets.set(albumId, [tweetId]);
           }
