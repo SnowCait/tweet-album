@@ -111,6 +111,12 @@ export const cacheAlbum = async event => {
           type: 'blob',
           content: json,
         },
+        {
+          path: `docs/api/${userId}/${albumId}.pretty.json`,
+          mode: '100644',
+          type: 'blob',
+          content: JSON.stringify(JSON.parse(json), null, 2),
+        },
       ],
       base_tree: branch.commit.commit.tree.sha,
     });
