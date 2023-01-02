@@ -136,6 +136,9 @@ export const auth = async event => {
   console.log('[me]', me);
 
   // Save
+  const expirationTime = Date.now() + expiresIn * 1000;
+  console.log('[expiration time]', new Date(expirationTime));
+
   await db.send(new UpdateCommand({
     TableName: usersTable,
     Key: {
@@ -154,7 +157,7 @@ export const auth = async event => {
       ':name': me.name,
       ':accessToken': accessToken,
       ':refreshToken': refreshToken,
-      ':expirationTime': Date.now() + expiresIn * 1000,
+      ':expirationTime': expirationTime,
     },
   }));
 
