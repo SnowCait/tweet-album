@@ -103,6 +103,16 @@ functions:
           path: /albums/{albumId}
           authorizer:
             name: twitterAuthorizer
+  cacheAlbum:
+    handler: handlers/streams.cacheAlbum
+    layers:
+      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
+    timeout: 60
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [ AlbumsTable, StreamArn ]
 
 resources:
   Resources:
@@ -137,6 +147,8 @@ resources:
         TimeToLiveSpecification:
           AttributeName: deletionTime
           Enabled: true
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
         BillingMode: PROVISIONED
         ProvisionedThroughput:
           ReadCapacityUnits: 1
