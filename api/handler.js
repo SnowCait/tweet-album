@@ -37,7 +37,7 @@ export const authorizer = async event => {
 
   // Expired by user
   if (user.expirationTime < Date.now()) {
-    tokens = await refreshingToken(user.twitterRefreshToken, userId);
+    tokens = await refreshAccessToken(user.twitterRefreshToken, userId);
   }
 
   // Expired by system
@@ -85,17 +85,10 @@ export const auth = async event => {
   const { code, verifier, redirectUrl } = JSON.parse(event.body);
 
   // Client Secret
-  const secretsResponse = await fetch(`http://localhost:2773/secretsmanager/get?secretId=${secretId}`, {
-    method: 'GET',
-    headers: {
-      'X-Aws-Parameters-Secrets-Token': awsSessionToken,
-    },
-  });
-  const secrets = await secretsResponse.json();
   const {
     TwitterClientId: clientId,
     TwitterClientSecret: clientSecret,
-  } = JSON.parse(secrets.SecretString);
+  } = await getSecrets();
 
   // Access Token
   const response = await fetch('https://api.twitter.com/2/oauth2/token', {
@@ -255,14 +248,15 @@ export const updateAlbums = async event => {
 
     const {
       twitterUserId: userId,
-      twitterAccessToken: accessToken,
       twitterRefreshToken,
       expirationTime,
       lastTweetId,
     } = user;
+    let { twitterAccessToken: accessToken } = user;
 
     if (expirationTime < Date.now()) {
-      await refreshingToken(twitterRefreshToken, userId);
+      const tokens = await refreshAccessToken(twitterRefreshToken, userId);
+      accessToken = tokens.access_token;
     }
 
     const keywords = userAlbums.get(userId);
@@ -417,6 +411,17 @@ export const deleteAlbum = async event => {
   return { statusCode: 200, body };
 };
 
+async function getSecrets() {
+  const secretsResponse = await fetch(`http://localhost:2773/secretsmanager/get?secretId=${secretId}`, {
+    method: 'GET',
+    headers: {
+      'X-Aws-Parameters-Secrets-Token': awsSessionToken,
+    },
+  });
+  const secrets = await secretsResponse.json();
+  return JSON.parse(secrets.SecretString);
+}
+
 async function updateLastTweetId(userId, lastTweetId) {
   console.log('[last tweet id]', lastTweetId);
 
@@ -432,16 +437,14 @@ async function updateLastTweetId(userId, lastTweetId) {
   }));
 }
 
-async function refreshingToken(refreshToken, userId) {
+async function refreshAccessToken(refreshToken, userId) {
   console.log('[refresh token]', refreshToken);
 
   // Client Secret
-  const secrets = await secretsManager.send(new GetSecretValueCommand({
-    SecretId: 'TweetAlbum',
-  }));
   const {
-    TwitterClientId: clientId, TwitterClientSecret: clientSecret,
-  } = JSON.parse(secrets.SecretString);
+    TwitterClientId: clientId,
+    TwitterClientSecret: clientSecret,
+  } = await getSecrets();
 
   // Refresh token
   const response = await fetch('https://api.twitter.com/2/oauth2/token', {
