@@ -392,9 +392,32 @@ export const showAlbum = async event => {
   console.log('[includes]', includes);
 
   const body = JSON.stringify({
+    title: album.title,
     tweets,
     includes,
     tokens,
+  });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};
+
+export const showAlbumTitle = async event => {
+  console.log('[event]', event);
+  console.log('[request path parameters]', event.pathParameters);
+
+  const { userId, albumId } = event.pathParameters;
+
+  const { Item: album } = await db.send(new GetCommand({
+    TableName: albumsTable,
+    Key: {
+      twitterUserId: userId,
+      id: Number(albumId),
+    },
+  }));
+  console.log('[album]', album);
+
+  const body = JSON.stringify({
+    title: album.title,
   });
   console.log('[response body]', body);
   return { statusCode: 200, body };

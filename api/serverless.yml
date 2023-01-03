@@ -93,6 +93,12 @@ functions:
           path: /{userId}/albums/{albumId}
           authorizer:
             name: twitterAuthorizer
+  showAlbumTitle:
+    handler: handler.showAlbumTitle
+    events:
+      - httpApi:
+          method: GET
+          path: /{userId}/albums/{albumId}/title
   deleteAlbum:
     handler: handler.deleteAlbum
     layers:
