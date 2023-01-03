@@ -31,7 +31,7 @@ async function fetchAlbums(userId) {
           <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.title }}</RouterLink>
           <AlbumDelete :album="album" />
         </div>
-        <div v-else="album.deletionTime">
+        <div v-else>
           {{ album.title }}
         </div>
       </ul>
