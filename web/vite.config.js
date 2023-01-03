@@ -12,6 +12,7 @@ export default defineConfig({
     }
   },
   define: {
+    __VUE_OPTIONS_API__: false,
     API_URL: JSON.stringify('https://lmgo2fuffa.execute-api.ap-northeast-1.amazonaws.com'),
     TWITTER_CLIENT_ID: JSON.stringify('dFdQakVfTUJsZzU1eDdZU1A4U2w6MTpjaQ'),
   },
