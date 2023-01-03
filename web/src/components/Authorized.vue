@@ -27,11 +27,11 @@ async function run() {
       return;
     }
 
-    const { id: userId } = JSON.parse(user);
+    const { username: screenName } = JSON.parse(user);
     await router.replace({
       name: 'user',
       params: {
-        userId,
+        screenName,
       },
     });
     location.reload(); // Workaround for updating user store
