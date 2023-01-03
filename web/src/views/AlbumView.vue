@@ -11,6 +11,11 @@ import AlbumTweets from '../components/AlbumTweets.vue'
 </template>
 
 <style>
+main {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 @media (min-width: 1024px) {
   .album {
     min-height: 100vh;

@@ -89,13 +89,23 @@ async function fetchAlbumArchive(userId, albumId) {
 <template>
   <section>
     <h1>{{ title }}</h1>
-    <ul id="tweets">
-      <ul v-for="tweet in tweets">
+    <ul>
+      <li v-for="tweet in tweets">
         <Tweet :tweet="tweet" :user="users.find(x => x.id === tweet.author_id)"/>
-      </ul>
+      </li>
     </ul>
   </section>
 </template>
 
 <style scoped>
+ul {
+  list-style: none;
+  padding: 0;
+  border: 1px solid rgb(239, 243, 244);
+  border-bottom-style: none;
+}
+
+li {
+  border-bottom: 1px solid rgb(239, 243, 244);
+}
 </style>
