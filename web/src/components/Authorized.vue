@@ -2,8 +2,8 @@
 import { Twitter } from './twitter.js';
 import router from '../router'
 
-const apiUrl = 'https://lmgo2fuffa.execute-api.ap-northeast-1.amazonaws.com';
-const clientId = 'dFdQakVfTUJsZzU1eDdZU1A4U2w6MTpjaQ';
+const apiUrl = API_URL;
+const clientId = TWITTER_CLIENT_ID;
 const redirectUrl = location.origin + import.meta.env.BASE_URL;
 console.log('[redirect URL]', redirectUrl);
 
