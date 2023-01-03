@@ -2,7 +2,14 @@
 const region = 'ap-northeast-1';
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+  QueryCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 const dynamoDB = new DynamoDBClient({ region });
 const db = DynamoDBDocumentClient.from(dynamoDB);
 
@@ -384,7 +391,11 @@ export const showAlbum = async event => {
   console.log('[tweets]', album.tweets.length, tweets.length, tweets);
   console.log('[includes]', includes);
 
-  const body = JSON.stringify({ tweets, includes, tokens });
+  const body = JSON.stringify({
+    tweets,
+    includes,
+    tokens,
+  });
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
