@@ -75,7 +75,7 @@ functions:
     events:
       - httpApi:
           method: GET
-          path: /{userId}/albums
+          path: /users/{userId}/albums
   updateAlbums:
     handler: handler.updateAlbums
     layers:

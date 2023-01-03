@@ -9,7 +9,7 @@ const albums = ref([]);
 fetchAlbums(userId);
 
 async function fetchAlbums(userId) {
-  const response = await fetch(`${apiUrl}/${userId}/albums`, {
+  const response = await fetch(`${apiUrl}/users/${userId}/albums`, {
     method: 'GET',
   });
 
