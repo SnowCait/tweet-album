@@ -47,6 +47,7 @@ img {
 .user {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   font-family: "Segoe UI",Meiryo,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
 }
 
