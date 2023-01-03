@@ -13,7 +13,7 @@ run();
 
 async function run() {
   const album = localStorage.getItem('user')
-    ? await fetchAlbum(userId, albumId)
+    ? await fetchMyAlbum(albumId)
     : await fetchAlbumArchive(userId, albumId);
 
   console.log('[album]', album);
@@ -35,13 +35,13 @@ function getAuthorizationHeader() {
   return `${userId}:${accessToken}`;
 }
 
-async function fetchAlbum(userId, albumId) {
+async function fetchMyAlbum(albumId) {
   const authorization = getAuthorizationHeader();
   if (authorization == null) {
     throw new Error('Not authorized.');
   }
 
-  const response = await fetch(`${apiUrl}/${userId}/albums/${albumId}`, {
+  const response = await fetch(`${apiUrl}/albums/${albumId}`, {
     method: 'GET',
     headers: {
       'Authorization': authorization,
@@ -56,7 +56,7 @@ async function fetchAlbum(userId, albumId) {
 }
 
 async function fetchAlbumTitle(userId, albumId) {
-  const response = await fetch(`${apiUrl}/${userId}/albums/${albumId}/title`, {
+  const response = await fetch(`${apiUrl}/users/${userId}/albums/${albumId}`, {
     method: 'GET',
   });
 

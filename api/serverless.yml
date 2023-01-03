@@ -90,15 +90,15 @@ functions:
     events:
       - httpApi:
           method: GET
-          path: /{userId}/albums/{albumId}
+          path: /albums/{albumId}
           authorizer:
             name: twitterAuthorizer
-  showAlbumTitle:
-    handler: handler.showAlbumTitle
+  showUserAlbum:
+    handler: handler.showUserAlbum
     events:
       - httpApi:
           method: GET
-          path: /{userId}/albums/{albumId}/title
+          path: /users/{userId}/albums/{albumId}
   deleteAlbum:
     handler: handler.deleteAlbum
     layers:

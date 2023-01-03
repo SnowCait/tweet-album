@@ -349,8 +349,8 @@ export const showAlbum = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
 
-  const { userId, albumId } = event.pathParameters;
-  const { accessToken, tokens } = event.requestContext.authorizer.lambda;
+  const { albumId } = event.pathParameters;
+  const { userId, accessToken, tokens } = event.requestContext.authorizer.lambda;
 
   const { Item: album } = await db.send(new GetCommand({
     TableName: albumsTable,
@@ -401,7 +401,7 @@ export const showAlbum = async event => {
   return { statusCode: 200, body };
 };
 
-export const showAlbumTitle = async event => {
+export const showUserAlbum = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
 
