@@ -30,5 +30,7 @@ jobs:
           aws-region: ap-northeast-1
       - run: npm ci
         working-directory: api
+        env:
+          NODE_ENV: production
       - run: serverless deploy --verbose
         working-directory: api
