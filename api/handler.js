@@ -154,7 +154,13 @@ export const auth = async event => {
     },
   }));
 
-  const body = JSON.stringify({ ...token, ...me });
+  const body = JSON.stringify({
+    userId: me.id,
+    accessToken,
+    expirationTime,
+    ...token,
+    ...me,
+  });
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
