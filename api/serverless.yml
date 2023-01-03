@@ -35,6 +35,11 @@ provider:
           Resource:
             - Fn::GetAtt: [ UsersTable, Arn ]
             - Fn::GetAtt: [ AlbumsTable, Arn ]
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+          Resource:
+            - Fn::Sub: ${UsersTable.Arn}/index/*
   environment:
     NODE_OPTIONS: --experimental-fetch
     secret_id: TweetAlbum
@@ -60,6 +65,12 @@ functions:
       - httpApi:
           method: POST
           path: /auth
+  showUserByScreenName:
+    handler: handler.showUserByScreenName
+    events:
+      - httpApi:
+          method: GET
+          path: /users/by/{screenName}
   createAlbum:
     handler: handler.createAlbum
     layers:
@@ -129,9 +140,21 @@ resources:
         AttributeDefinitions:
           - AttributeName: twitterUserId
             AttributeType: S
+          - AttributeName: twitterScreenName
+            AttributeType: S
         KeySchema:
           - AttributeName: twitterUserId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: screenName-index
+            KeySchema:
+              - AttributeName: twitterScreenName
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         BillingMode: PROVISIONED
         ProvisionedThroughput:
           ReadCapacityUnits: 1

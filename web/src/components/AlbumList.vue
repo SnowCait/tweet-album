@@ -4,9 +4,30 @@ import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const apiUrl = API_URL;
-const { userId } = useRoute().params;
+const { screenName } = useRoute().params;
+const userId = ref('');
 const albums = ref([]);
-fetchAlbums(userId);
+
+run();
+
+async function run() {
+  const user = await fetchUser(screenName);
+  const data = await fetchAlbums(user.userId);
+  userId.value = user.userId;
+  albums.value = data.albums;
+}
+
+async function fetchUser(screenName) {
+  const response = await fetch(`${apiUrl}/users/by/${screenName}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('Cannot get user.');
+  }
+
+ return await response.json();
+}
 
 async function fetchAlbums(userId) {
   const response = await fetch(`${apiUrl}/users/${userId}/albums`, {
@@ -17,8 +38,7 @@ async function fetchAlbums(userId) {
     throw new Error('Cannot get albums.');
   }
 
-  const data = await response.json();
-  albums.value = data.albums;
+ return await response.json();
 }
 </script>
 
@@ -28,7 +48,7 @@ async function fetchAlbums(userId) {
     <ul id="albums">
       <ul v-for="album in albums">
         <div v-if="!album.deletionTime">
-          <RouterLink :to="{ name: 'album', params: { userId, albumId: album.id } }">{{ album.title }}</RouterLink>
+          <RouterLink :to="{ name: 'album', params: { screenName, userId, albumId: album.id } }">{{ album.title }}</RouterLink>
           <AlbumDelete :album="album" />
         </div>
         <div v-else>

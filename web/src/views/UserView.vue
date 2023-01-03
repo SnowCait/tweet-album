@@ -6,7 +6,7 @@ import AlbumList from '../components/AlbumList.vue'
 <template>
   <div class="album">
     <main>
-      <h1>{{ $route.params.userId }} のアルバム</h1>
+      <h1>@{{ $route.params.screenName }} のアルバム</h1>
       <AlbumCreate />
       <AlbumList />
     </main>

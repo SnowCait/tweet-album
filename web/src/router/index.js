@@ -18,12 +18,12 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
-      path: '/:userId',
+      path: '/:screenName',
       name: 'user',
       component: () => import('../views/UserView.vue')
     },
     {
-      path: '/:userId/albums/:albumId',
+      path: '/:screenName/albums/:userId-:albumId',
       name: 'album',
       component: () => import('../views/AlbumView.vue')
     },

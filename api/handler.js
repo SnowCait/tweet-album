@@ -172,6 +172,29 @@ export const auth = async event => {
   return { statusCode: 200, body };
 };
 
+export const showUserByScreenName = async event => {
+  console.log('[event]', event);
+  console.log('[request path parameters]', event.pathParameters);
+
+  const { screenName } = event.pathParameters;
+
+  const { Items: [ user ] } = await db.send(new QueryCommand({
+    TableName: usersTable,
+    KeyConditionExpression: 'twitterScreenName = :screenName',
+    ExpressionAttributeValues: {
+      ':screenName': screenName,
+    },
+    IndexName: 'screenName-index',
+  }));
+  console.log('[user]', user);
+
+  const body = JSON.stringify({
+    userId: user?.twitterUserId,
+  });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};
+
 export const createAlbum = async event => {
   console.log('[event]', event);
   console.log('[request body]', event.body);

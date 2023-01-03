@@ -9,7 +9,7 @@ const store = useUserStore();
 
 <template>
   <nav>
-    <RouterLink :to="{ name: 'user', params: { userId: store.user?.id } }" v-if="store.loggedIn">
+    <RouterLink :to="{ name: 'user', params: { screenName: store.user?.username } }" v-if="store.loggedIn">
       <div>@{{ store.user?.username }}</div>
     </RouterLink>
     <Signin v-else/>
