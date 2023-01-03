@@ -1,7 +1,10 @@
 <script setup>
-import AlbumDelete from '../components/AlbumDelete.vue'
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useUserStore } from '@/stores/user'
+import AlbumDelete from '../components/AlbumDelete.vue'
+
+const { loggedIn } = useUserStore();
 
 const apiUrl = API_URL;
 const { screenName } = useRoute().params;
@@ -49,7 +52,7 @@ async function fetchAlbums(userId) {
       <ul v-for="album in albums">
         <div v-if="!album.deletionTime">
           <RouterLink :to="{ name: 'album', params: { screenName, userId, albumId: album.id } }">{{ album.title }}</RouterLink>
-          <AlbumDelete :album="album" />
+          <AlbumDelete :album="album" v-if="loggedIn" />
         </div>
         <div v-else>
           {{ album.title }}
