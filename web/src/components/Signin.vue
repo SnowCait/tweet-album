@@ -31,7 +31,7 @@ function randomString(length) {
 
 <template>
   <div class="signin">
-    <button id="signin" @click="signin">Sign in with Twitter</button>
+    <button id="signin" @click="signin">ログイン</button>
   </div>
 </template>
 
