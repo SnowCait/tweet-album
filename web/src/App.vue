@@ -6,7 +6,7 @@ import Menu from './components/Menu.vue';
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+    <img alt="logo" class="logo" src="@/assets/logo.png" />
 
     <div class="wrapper">
       <HelloWorld msg="You did it!" />
@@ -31,6 +31,8 @@ header {
 .logo {
   display: block;
   margin: 0 auto 2rem;
+  width: 240px;
+  max-width: 80%;
 }
 
 nav {
