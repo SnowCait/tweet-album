@@ -545,10 +545,10 @@ async function fetchMe(accessToken) {
 /**
  * @param {string} refreshToken
  * @param {string} userId
- * @param {boolean} updateAuthorizationAccessToken
+ * @param {boolean} isUserAccess
  * @returns
  */
-async function refreshAccessToken(refreshToken, userId, updateAuthorizationAccessToken = false) {
+async function refreshAccessToken(refreshToken, userId, isUserAccess = false) {
   console.log('[refresh token]', refreshToken);
 
   // Client Secret
@@ -586,15 +586,24 @@ async function refreshAccessToken(refreshToken, userId, updateAuthorizationAcces
   const expirationTime = Date.now() + expiresIn * 1000;
   console.log('[expiration time]', new Date(expirationTime));
 
-  const updateExpressionAttributes = [
-    'twitterAccessToken = :accessToken',
-    'twitterRefreshToken = :refreshToken',
-    'expirationTime = :expirationTime',
-  ];
-  if (updateAuthorizationAccessToken) {
-    updateExpressionAttributes.push(
+  let additionalUpdateExpressionAttributes = null;
+  let additionalExpressionAttributeValues = null;
+  if (isUserAccess) {
+    const me = await fetchMe(accessToken);
+    console.log('[me]', me);
+
+    additionalUpdateExpressionAttributes = [
+      'twitterScreenName = :screenName',
+      'twitterName = :name',
+      'twitterProfileImageUrl = :profileImageUrl',
       'authorizationAccessToken = :accessToken',
-    );
+    ];
+
+    additionalExpressionAttributeValues = {
+      ':screenName': me.username,
+      ':name': me.name,
+      ':profileImageUrl': me.profile_image_url,
+    };
   }
 
   await db.send(new UpdateCommand({
@@ -602,11 +611,17 @@ async function refreshAccessToken(refreshToken, userId, updateAuthorizationAcces
     Key: {
       twitterUserId: userId,
     },
-    UpdateExpression: `SET ${updateExpressionAttributes.join(', ')}`,
+    UpdateExpression: `SET ${[
+      'twitterAccessToken = :accessToken',
+      'twitterRefreshToken = :refreshToken',
+      'expirationTime = :expirationTime',
+      ...additionalUpdateExpressionAttributes,
+    ].join(', ')}`,
     ExpressionAttributeValues: {
       ':accessToken': accessToken,
       ':refreshToken': newRefreshToken,
       ':expirationTime': expirationTime,
+      ...additionalExpressionAttributeValues,
     },
   }));
 
