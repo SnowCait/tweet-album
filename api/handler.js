@@ -123,21 +123,21 @@ export const auth = async event => {
   await db.send(new UpdateCommand({
     TableName: usersTable,
     Key: {
-      twitterUserId: me.id,
+      twitterUserId: me.userId,
     },
-    UpdateExpression: [
-      'SET twitterScreenName = :screenName',
+    UpdateExpression: `SET ${[
+      'twitterScreenName = :screenName',
       'twitterName = :name',
       'twitterProfileImageUrl = :profileImageUrl',
       'twitterAccessToken = :accessToken',
       'twitterRefreshToken = :refreshToken',
       'authorizationAccessToken = :accessToken',
       'expirationTime = :expirationTime',
-    ].join(', '),
+    ].join(', ')}`,
     ExpressionAttributeValues: {
-      ':screenName': me.username,
+      ':screenName': me.screenName,
       ':name': me.name,
-      ':profileImageUrl': me.profile_image_url,
+      ':profileImageUrl': me.profileImageUrl,
       ':accessToken': accessToken,
       ':refreshToken': refreshToken,
       ':expirationTime': expirationTime,
@@ -145,10 +145,7 @@ export const auth = async event => {
   }));
 
   const body = JSON.stringify({
-    userId: me.id,
-    screenName: me.username,
-    name: me.name,
-    profileImageUrl: me.profile_image_url,
+    ...me,
     accessToken,
     expirationTime,
   });
@@ -539,7 +536,13 @@ async function fetchMe(accessToken) {
     throw new Error(await response.text());
   }
 
-  return await response.json();
+  const { data: me } = await response.json();
+  return {
+    userId: me.id,
+    screenName: me.username,
+    name: me.name,
+    profileImageUrl: me.profile_image_url,
+  };
 }
 
 /**
@@ -600,9 +603,9 @@ async function refreshAccessToken(refreshToken, userId, isUserAccess = false) {
     ];
 
     additionalExpressionAttributeValues = {
-      ':screenName': me.username,
+      ':screenName': me.screenName,
       ':name': me.name,
-      ':profileImageUrl': me.profile_image_url,
+      ':profileImageUrl': me.profileImageUrl,
     };
   }
 
