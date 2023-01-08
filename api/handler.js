@@ -165,6 +165,40 @@ export const auth = async event => {
   return { statusCode: 200, body };
 };
 
+export const showMe = async event => {
+  console.log('[event]', event);
+
+  const { userId } = event.requestContext.authorizer.lambda;
+
+  const { Item: user } = await db.send(new GetCommand({
+    TableName: usersTable,
+    Key: {
+      twitterUserId: userId,
+    },
+  }));
+  console.log('[user]', user);
+
+  if (user === undefined) {
+    throw new Error('User not found.');
+  }
+
+  let tokens = null;
+  if (user.expirationTime < Date.now()) {
+    tokens = await refreshAccessToken(user.twitterRefreshToken, userId, true);
+  }
+
+  const body = JSON.stringify({
+    userId: user.twitterUserId,
+    screenName: user.twitterScreenName,
+    name: user.twitterName,
+    accessToken: user.twitterAccessToken,
+    expirationTime: user.expirationTime,
+    ...tokens,
+  });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};
+
 export const showUserByScreenName = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
@@ -492,7 +526,13 @@ async function updateLastTweetId(userId, lastTweetId) {
   }));
 }
 
-async function refreshAccessToken(refreshToken, userId) {
+/**
+ * @param {string} refreshToken
+ * @param {string} userId
+ * @param {boolean} updateAuthorizationAccessToken
+ * @returns
+ */
+async function refreshAccessToken(refreshToken, userId, updateAuthorizationAccessToken = false) {
   console.log('[refresh token]', refreshToken);
 
   // Client Secret
@@ -530,12 +570,23 @@ async function refreshAccessToken(refreshToken, userId) {
   const expirationTime = Date.now() + expiresIn * 1000;
   console.log('[expiration time]', new Date(expirationTime));
 
+  const updateExpressionAttributes = [
+    'twitterAccessToken = :accessToken',
+    'twitterRefreshToken = :refreshToken',
+    'expirationTime = :expirationTime',
+  ];
+  if (updateAuthorizationAccessToken) {
+    updateExpressionAttributes.push(
+      'authorizationAccessToken = :accessToken',
+    );
+  }
+
   await db.send(new UpdateCommand({
     TableName: usersTable,
     Key: {
       twitterUserId: userId,
     },
-    UpdateExpression: 'SET twitterAccessToken = :accessToken, twitterRefreshToken = :refreshToken, expirationTime = :expirationTime',
+    UpdateExpression: `SET ${updateExpressionAttributes.join(', ')}`,
     ExpressionAttributeValues: {
       ':accessToken': accessToken,
       ':refreshToken': newRefreshToken,

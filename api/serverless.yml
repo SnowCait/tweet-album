@@ -65,6 +65,16 @@ functions:
       - httpApi:
           method: POST
           path: /auth
+  showMe:
+    handler: handler.showMe
+    layers:
+      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
+    events:
+      - httpApi:
+          method: GET
+          path: /users/me
+          authorizer:
+            name: twitterAuthorizer
   showUserByScreenName:
     handler: handler.showUserByScreenName
     events:
@@ -73,8 +83,6 @@ functions:
           path: /users/by/{screenName}
   createAlbum:
     handler: handler.createAlbum
-    layers:
-      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
     events:
       - httpApi:
           method: POST
@@ -89,15 +97,11 @@ functions:
           path: /users/{userId}/albums
   updateAlbums:
     handler: handler.updateAlbums
-    layers:
-      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
     events:
       - eventBridge:
           schedule: rate(1 hour)
   showAlbum:
     handler: handler.showAlbum
-    layers:
-      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
     events:
       - httpApi:
           method: GET
@@ -112,8 +116,6 @@ functions:
           path: /users/{userId}/albums/{albumId}
   deleteAlbum:
     handler: handler.deleteAlbum
-    layers:
-      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
     events:
       - httpApi:
           method: DELETE
@@ -122,8 +124,6 @@ functions:
             name: twitterAuthorizer
   cacheAlbum:
     handler: handlers/streams.cacheAlbum
-    layers:
-      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
     timeout: 60
     events:
       - stream:
