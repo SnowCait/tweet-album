@@ -1,10 +1,12 @@
 <script setup>
-import Tweet from './Tweet.vue'
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import Tweet from './Tweet.vue';
 
 const apiUrl = API_URL;
 const { userId, albumId } = useRoute().params;
+const { loggedIn, getAuthorizationHeader } = useUserStore();
 const title = ref('');
 const tweets = ref([]);
 const users = ref([]);
@@ -12,7 +14,7 @@ const users = ref([]);
 run();
 
 async function run() {
-  const album = localStorage.getItem('user')
+  const album = loggedIn
     ? await fetchMyAlbum(albumId)
     : await fetchAlbumArchive(userId, albumId);
 
@@ -22,29 +24,16 @@ async function run() {
   users.value = album.includes.users;
 }
 
-function getAuthorizationHeader() {
-  const user = localStorage.getItem('user');
-  console.log('[user]', user);
-
-  if (!user) {
-    console.error('[unauthorized]');
-    return null;
-  }
-
-  const { id: userId, access_token: accessToken } = JSON.parse(user);
-  return `${userId}:${accessToken}`;
-}
-
 async function fetchMyAlbum(albumId) {
-  const authorization = getAuthorizationHeader();
-  if (authorization == null) {
+  const authorizationHeader = getAuthorizationHeader();
+  if (authorizationHeader === null) {
     throw new Error('Not authorized.');
   }
 
   const response = await fetch(`${apiUrl}/albums/${albumId}`, {
     method: 'GET',
     headers: {
-      'Authorization': authorization,
+      ...authorizationHeader,
     },
   });
 

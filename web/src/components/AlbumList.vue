@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user'
 import AlbumDelete from '../components/AlbumDelete.vue'
 
-const { loggedIn } = useUserStore();
+const { loggedIn, fetchUserBy } = useUserStore();
 
 const apiUrl = API_URL;
 const { screenName } = useRoute().params;
@@ -14,22 +14,10 @@ const albums = ref([]);
 run();
 
 async function run() {
-  const user = await fetchUser(screenName);
+  const user = await fetchUserBy(screenName);
   const data = await fetchAlbums(user.userId);
   userId.value = user.userId;
   albums.value = data.albums;
-}
-
-async function fetchUser(screenName) {
-  const response = await fetch(`${apiUrl}/users/by/${screenName}`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    throw new Error('Cannot get user.');
-  }
-
- return await response.json();
 }
 
 async function fetchAlbums(userId) {

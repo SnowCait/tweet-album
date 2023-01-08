@@ -1,6 +1,6 @@
 <script setup>
-import { RouterLink } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { RouterLink } from 'vue-router';
+import { useUserStore } from '@/stores/user';
 import Signin from './Signin.vue';
 import Authorized from './Authorized.vue';
 
@@ -9,8 +9,8 @@ const store = useUserStore();
 
 <template>
   <nav>
-    <RouterLink :to="{ name: 'user', params: { screenName: store.user?.username } }" v-if="store.loggedIn">
-      <div>@{{ store.user?.username }}</div>
+    <RouterLink :to="{ name: 'user', params: { screenName: store.user?.screenName } }" v-if="store.loggedIn">
+      <div>@{{ store.user?.screenName }}</div>
     </RouterLink>
     <Signin v-else/>
     <Authorized />
