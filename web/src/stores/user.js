@@ -72,6 +72,7 @@ export const useUserStore = defineStore('user', () => {
   return {
     user,
     userName,
+    screenName,
     loggedIn,
     getAuthorizationHeader,
     fetchMe,
