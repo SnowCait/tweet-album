@@ -70,6 +70,16 @@ export const useUserStore = defineStore('user', () => {
    return await response.json();
   };
 
+  const logout = () => {
+    console.log('[logout]');
+    localStorage.clear();
+    user.value = null;
+    userId.value = '';
+    userName.value = '';
+    screenName.value = '';
+    location.reload(); // Workaround for updating user store
+  };
+
   return {
     user,
     userName,
@@ -78,5 +88,6 @@ export const useUserStore = defineStore('user', () => {
     getAuthorizationHeader,
     fetchMe,
     fetchUserBy,
+    logout,
   };
 });
