@@ -113,23 +113,7 @@ export const auth = async event => {
   } = token;
 
   // Me
-  const params = new URLSearchParams();
-  params.append('user.fields', 'profile_image_url');
-  console.log('[params]', params.toString());
-
-  const meResponse = await fetch(`https://api.twitter.com/2/users/me?${params.toString()}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!meResponse.ok) {
-    throw new Error(await meResponse.text());
-  }
-
-  const { data: me } = await meResponse.json();
+  const me = await fetchMe(accessToken);
   console.log('[me]', me);
 
   // Save
@@ -532,6 +516,30 @@ async function updateLastTweetId(userId, lastTweetId) {
       ':lastTweetId': lastTweetId,
     },
   }));
+}
+
+/**
+ * @param {string} accessToken
+ * @returns
+ */
+async function fetchMe(accessToken) {
+  const params = new URLSearchParams();
+  params.append('user.fields', 'profile_image_url');
+  console.log('[params]', params.toString());
+
+  const response = await fetch(`https://api.twitter.com/2/users/me?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  return await response.json();
 }
 
 /**
