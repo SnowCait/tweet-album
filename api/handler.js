@@ -113,7 +113,11 @@ export const auth = async event => {
   } = token;
 
   // Me
-  const meResponse = await fetch('https://api.twitter.com/2/users/me', {
+  const params = new URLSearchParams();
+  params.append('user.fields', 'profile_image_url');
+  console.log('[params]', params.toString());
+
+  const meResponse = await fetch(`https://api.twitter.com/2/users/me?${params.toString()}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -140,6 +144,7 @@ export const auth = async event => {
     UpdateExpression: [
       'SET twitterScreenName = :screenName',
       'twitterName = :name',
+      'twitterProfileImageUrl = :profileImageUrl',
       'twitterAccessToken = :accessToken',
       'twitterRefreshToken = :refreshToken',
       'authorizationAccessToken = :accessToken',
@@ -148,6 +153,7 @@ export const auth = async event => {
     ExpressionAttributeValues: {
       ':screenName': me.username,
       ':name': me.name,
+      ':profileImageUrl': me.profile_image_url,
       ':accessToken': accessToken,
       ':refreshToken': refreshToken,
       ':expirationTime': expirationTime,
@@ -156,10 +162,11 @@ export const auth = async event => {
 
   const body = JSON.stringify({
     userId: me.id,
+    screenName: me.username,
+    name: me.name,
+    profileImageUrl: me.profile_image_url,
     accessToken,
     expirationTime,
-    ...token,
-    ...me,
   });
   console.log('[response body]', body);
   return { statusCode: 200, body };
@@ -191,6 +198,7 @@ export const showMe = async event => {
     userId: user.twitterUserId,
     screenName: user.twitterScreenName,
     name: user.twitterName,
+    profileImageUrl: user.twitterProfileImageUrl,
     accessToken: user.twitterAccessToken,
     expirationTime: user.expirationTime,
     ...tokens,
