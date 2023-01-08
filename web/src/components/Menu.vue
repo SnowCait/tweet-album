@@ -10,6 +10,7 @@ const store = useUserStore();
 <template>
   <nav>
     <RouterLink :to="{ name: 'user', params: { screenName: store.user?.screenName } }" v-if="store.loggedIn">
+      <img :src="store.user?.profileImageUrl" />
       <div>@{{ store.user?.screenName }}</div>
     </RouterLink>
     <Signin v-else/>

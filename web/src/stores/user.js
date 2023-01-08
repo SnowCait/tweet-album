@@ -49,6 +49,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
    const me = await response.json();
+   console.log('[me]', me);
    localStorage.setItem('user', JSON.stringify(me));
    user.value = me;
    userId.value = me.userId;

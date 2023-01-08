@@ -27,7 +27,7 @@ async function run() {
       return;
     }
 
-    const { username: screenName } = JSON.parse(user);
+    const { screenName } = JSON.parse(user);
     await router.replace({
       name: 'user',
       params: {
