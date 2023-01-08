@@ -40,12 +40,6 @@ export const authorizer = async event => {
 
   const isAuthorized = (authorizationAccessToken === user.authorizationAccessToken);
   let accessToken = authorizationAccessToken;
-  let tokens = null;
-
-  // Expired by user
-  if (user.expirationTime < Date.now()) {
-    tokens = await refreshAccessToken(user.twitterRefreshToken, userId);
-  }
 
   // Expired by system
   if (user.twitterAccessToken !== user.authorizationAccessToken) {
@@ -64,7 +58,6 @@ export const authorizer = async event => {
     context: {
       userId,
       accessToken,
-      tokens,
     },
   };
   console.log('[response]', response);
@@ -292,7 +285,7 @@ export const updateAlbums = async event => {
 
     if (expirationTime < Date.now()) {
       const tokens = await refreshAccessToken(twitterRefreshToken, userId);
-      accessToken = tokens.access_token;
+      accessToken = tokens.accessToken;
     }
 
     const keywords = userAlbums.get(userId);
@@ -373,7 +366,7 @@ export const showAlbum = async event => {
   console.log('[request path parameters]', event.pathParameters);
 
   const { albumId } = event.pathParameters;
-  const { userId, accessToken, tokens } = event.requestContext.authorizer.lambda;
+  const { userId, accessToken } = event.requestContext.authorizer.lambda;
 
   const { Item: album } = await db.send(new GetCommand({
     TableName: albumsTable,
@@ -418,7 +411,6 @@ export const showAlbum = async event => {
     title: album.title,
     tweets,
     includes,
-    tokens,
   });
   console.log('[response body]', body);
   return { statusCode: 200, body };
@@ -529,12 +521,15 @@ async function refreshAccessToken(refreshToken, userId) {
   const tokens = await response.json();
   console.log('[tokens]', tokens);
   const {
-    access_token: newAccessToken,
+    access_token: accessToken,
     refresh_token: newRefreshToken,
     expires_in: expiresIn,
   } = tokens;
 
   // Save
+  const expirationTime = Date.now() + expiresIn * 1000;
+  console.log('[expiration time]', new Date(expirationTime));
+
   await db.send(new UpdateCommand({
     TableName: usersTable,
     Key: {
@@ -542,12 +537,15 @@ async function refreshAccessToken(refreshToken, userId) {
     },
     UpdateExpression: 'SET twitterAccessToken = :accessToken, twitterRefreshToken = :refreshToken, expirationTime = :expirationTime',
     ExpressionAttributeValues: {
-      ':accessToken': newAccessToken,
+      ':accessToken': accessToken,
       ':refreshToken': newRefreshToken,
-      ':expirationTime': Date.now() + expiresIn * 1000,
+      ':expirationTime': expirationTime,
     },
   }));
 
-  return tokens;
+  return {
+    accessToken,
+    expirationTime,
+  };
 }
 
