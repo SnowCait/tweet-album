@@ -17,6 +17,10 @@ provider:
         resultTtlInSeconds: 3600
         identitySource:
           - $request.header.Authorization
+  logs:
+    httpApi: true
+    frameworkLambda: true
+  logRetentionInDays: 30
   iam:
     role:
       statements:
