@@ -226,7 +226,12 @@ export const createAlbum = async event => {
       twitterUserId: userId,
       id,
       title: keyword,
-      keyword,
+      conditions: [
+        {
+          type: Type.Keyword,
+          keyword,
+        },
+      ],
     },
   }));
 
@@ -350,14 +355,30 @@ export const updateAlbums = async event => {
     for (const tweet of tweets) {
       console.log('[tweet]', tweet);
       const { id: tweetId, text } = tweet;
-      for (const { id: albumId, keyword } of keywords) {
-        if (text.includes(keyword)) {
-          console.log('[match]', albumId, tweet);
-          const list = newAlbumTweets.get(albumId);
-          if (list) {
-            list.push(tweetId);
-          } else {
-            newAlbumTweets.set(albumId, [tweetId]);
+      for (const { id: albumId, conditions } of keywords) {
+        console.log('[conditions]', albumId, conditions);
+
+        if (conditions === undefined) {
+          continue;
+        }
+
+        for (const { type, keyword } of conditions) {
+          switch (type) {
+            case Type.Keyword:
+              if (text.includes(keyword)) {
+                console.log('[match]', albumId, tweet);
+                const list = newAlbumTweets.get(albumId);
+                if (list) {
+                  list.push(tweetId);
+                } else {
+                  newAlbumTweets.set(albumId, [tweetId]);
+                }
+              }
+              break;
+            case Type.Regex:
+              throw new NotImplementedError('Regex type is not implemented.');
+            default:
+              throw new Error(`Undefined type: ${type}`);
           }
         }
       }
@@ -641,3 +662,9 @@ async function refreshAccessToken(refreshToken, userId, isUserAccess = false) {
   };
 }
 
+const Type = Object.freeze({
+  Keyword: 'keyword',
+  Regex: 'regex',
+});
+
+class NotImplementedError extends Error {}
