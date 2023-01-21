@@ -1,10 +1,10 @@
 <script setup>
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useUserStore } from '@/stores/user';
 import router from '../router';
 
 const apiUrl = API_URL;
-const { userId } = useRoute().params;
+const { getAuthorizationHeader } = useUserStore();
 const keyword = ref('');
 const disabled = ref(false);
 
@@ -15,9 +15,11 @@ const onSubmit = async _ => {
     const { id } = await createAlbum(keyword.value);
     console.log('[album id]', id);
     keyword.value = '';
+    const { userId, screenName } = useUserStore();
     router.push({
       name: 'album',
       params: {
+        screenName,
         userId,
         albumId: id,
       },
@@ -29,29 +31,16 @@ const onSubmit = async _ => {
   }
 };
 
-function getAuthorizationHeader() {
-  const user = localStorage.getItem('user');
-  console.log('[user]', user);
-
-  if (!user) {
-    console.error('[unauthorized]');
-    return null;
-  }
-
-  const { id: userId, access_token: accessToken } = JSON.parse(user);
-  return `${userId}:${accessToken}`;
-}
-
 async function createAlbum(keyword) {
-  const authorization = getAuthorizationHeader();
-  if (authorization == null) {
+  const authorizationHeader = getAuthorizationHeader();
+  if (authorizationHeader == null) {
     throw new Error('Not authorized.');
   }
 
   const response = await fetch(`${apiUrl}/albums`, {
     method: 'POST',
     headers: {
-      'Authorization': authorization,
+      ...authorizationHeader,
     },
     body: JSON.stringify({
       keyword,
