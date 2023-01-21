@@ -363,6 +363,8 @@ export const updateAlbums = async event => {
       }
     }
 
+    console.log('[new album tweets]', newAlbumTweets);
+
     for (const [ albumId, albumTweets ] of newAlbumTweets) {
       console.log('[album tweets]', albumTweets);
       await db.send(new UpdateCommand({
