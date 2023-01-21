@@ -45,7 +45,6 @@ provider:
           Resource:
             - Fn::Sub: ${UsersTable.Arn}/index/*
   environment:
-    NODE_OPTIONS: --experimental-fetch
     secret_id: TweetAlbum
     users_table:
       Ref: UsersTable
