@@ -490,13 +490,18 @@ export const deleteAlbum = async event => {
 };
 
 async function getSecrets() {
-  const secretsResponse = await fetch(`http://localhost:2773/secretsmanager/get?secretId=${secretId}`, {
+  const response = await fetch(`http://localhost:2773/secretsmanager/get?secretId=${secretId}`, {
     method: 'GET',
     headers: {
       'X-Aws-Parameters-Secrets-Token': awsSessionToken,
     },
   });
-  const secrets = await secretsResponse.json();
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const secrets = await response.json();
   return JSON.parse(secrets.SecretString);
 }
 
