@@ -592,11 +592,11 @@ async function refreshAccessToken(refreshToken, userId, isUserAccess = false) {
     expires_in: expiresIn,
   } = tokens;
 
-  // Save
+  // Save (If failed, inconsistency is caused. Try re-login manually.)
   const expirationTime = Date.now() + expiresIn * 1000;
   console.log('[expiration time]', new Date(expirationTime));
 
-  let additionalUpdateExpressionAttributes = null;
+  let additionalUpdateExpressionAttributes = [];
   let additionalExpressionAttributeValues = null;
   if (isUserAccess) {
     const me = await fetchMe(accessToken);
