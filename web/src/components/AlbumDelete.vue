@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps({
   album: {
@@ -9,6 +10,7 @@ const props = defineProps({
 });
 
 const apiUrl = API_URL;
+const { getAuthorizationHeader } = useUserStore();
 const disabled = ref(false);
 
 const onSubmit = async _ => {
@@ -25,29 +27,16 @@ const onSubmit = async _ => {
   }
 };
 
-function getAuthorizationHeader() {
-  const user = localStorage.getItem('user');
-  console.log('[user]', user);
-
-  if (!user) {
-    console.error('[unauthorized]');
-    return null;
-  }
-
-  const { id: userId, access_token: accessToken } = JSON.parse(user);
-  return `${userId}:${accessToken}`;
-}
-
 async function deleteAlbum(albumId) {
-  const authorization = getAuthorizationHeader();
-  if (authorization == null) {
+  const authorizationHeader = getAuthorizationHeader();
+  if (authorizationHeader == null) {
     throw new Error('Not authorized.');
   }
 
   const response = await fetch(`${apiUrl}/albums/${albumId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': authorization,
+      ...authorizationHeader,
     },
   });
 
