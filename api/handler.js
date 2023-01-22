@@ -291,12 +291,7 @@ export const updateAlbums = async event => {
 
   let userAlbums = new Map();
   for (const album of allAlbums) {
-    const list = userAlbums.get(album.twitterUserId);
-    if (list) {
-      list.push(album);
-    } else {
-      userAlbums.set(album.twitterUserId, [album]);
-    }
+    addListOnMap(userAlbums, album.twitterUserId, album);
   }
   console.log('[user albums]', userAlbums);
 
@@ -367,12 +362,7 @@ export const updateAlbums = async event => {
             case Type.Keyword:
               if (text.includes(keyword)) {
                 console.log('[match]', albumId, tweet);
-                const list = newAlbumTweets.get(albumId);
-                if (list) {
-                  list.push(tweetId);
-                } else {
-                  newAlbumTweets.set(albumId, [tweetId]);
-                }
+                addListOnMap(newAlbumTweets, albumId, tweetId);
               }
               break;
             case Type.Regex:
@@ -511,6 +501,15 @@ export const deleteAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+function addListOnMap(map, key, value) {
+  const list = map.get(key);
+  if (list) {
+    list.push(value);
+  } else {
+    map.set(key, [value]);
+  }
+}
 
 async function getSecrets() {
   const response = await fetch(`http://localhost:2773/secretsmanager/get?secretId=${secretId}`, {
