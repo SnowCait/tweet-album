@@ -329,9 +329,7 @@ export const updateAlbums = async event => {
     }
 
     // Search
-    let newAlbumTweets = new Map();
-    searchTweets(tweets, albums, newAlbumTweets);
-
+    const newAlbumTweets = searchTweets(tweets, albums);
     console.log('[new album tweets]', newAlbumTweets);
 
     // Update albums
@@ -487,7 +485,8 @@ async function fetchTweets(accessToken, userId, lastTweetId) {
   return await tweetsResponse.json();;
 }
 
-function searchTweets(tweets, albums, newAlbumTweets) {
+function searchTweets(tweets, albums) {
+  let newAlbumTweets = new Map();
   for (const tweet of tweets) {
     console.log('[tweet]', tweet);
     const { id: tweetId, text } = tweet;
@@ -514,6 +513,7 @@ function searchTweets(tweets, albums, newAlbumTweets) {
       }
     }
   }
+  return newAlbumTweets;
 }
 
 function addListOnMap(map, key, value) {
