@@ -333,20 +333,7 @@ export const updateAlbums = async event => {
     console.log('[new album tweets]', newAlbumTweets);
 
     // Update albums
-    for (const [ albumId, albumTweets ] of newAlbumTweets) {
-      console.log('[album tweets]', albumTweets);
-      await db.send(new UpdateCommand({
-        TableName: albumsTable,
-        Key: {
-          twitterUserId: userId,
-          id: albumId,
-        },
-        UpdateExpression: 'ADD tweets :tweets',
-        ExpressionAttributeValues: {
-          ':tweets': new Set(albumTweets),
-        },
-      }));
-    }
+    await updateAlbums(userId, newAlbumTweets);
 
     // Update last tweet
     await updateLastTweetId(userId, meta.newest_id);
@@ -459,6 +446,23 @@ export const deleteAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+async function updateAlbums(userId, newAlbumTweets) {
+  for (const [ albumId, albumTweets ] of newAlbumTweets) {
+    console.log('[album tweets]', albumTweets);
+    await db.send(new UpdateCommand({
+      TableName: albumsTable,
+      Key: {
+        twitterUserId: userId,
+        id: albumId,
+      },
+      UpdateExpression: 'ADD tweets :tweets',
+      ExpressionAttributeValues: {
+        ':tweets': new Set(albumTweets),
+      },
+    }));
+  }
+}
 
 async function fetchTweets(accessToken, userId, lastTweetId) {
   const params = new URLSearchParams();
