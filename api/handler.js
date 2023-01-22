@@ -215,25 +215,50 @@ export const createAlbum = async event => {
   console.log('[event]', event);
   console.log('[request body]', event.body);
 
-  const { keyword } = JSON.parse(event.body);
+  const { keyword, since } = JSON.parse(event.body);
   const { userId } = event.requestContext.authorizer.lambda;
 
   const id = Date.now();
 
+  const album = {
+    twitterUserId: userId,
+    id,
+    title: keyword,
+    conditions: [
+      {
+        type: Type.Keyword,
+        keyword,
+      },
+    ],
+  };
   await db.send(new PutCommand({
     TableName: albumsTable,
-    Item: {
-      twitterUserId: userId,
-      id,
-      title: keyword,
-      conditions: [
-        {
-          type: Type.Keyword,
-          keyword,
-        },
-      ],
-    },
+    Item: album,
   }));
+
+  // User
+  const user = await getUser(userId);
+  console.log('[user]', user);
+  if (user === null) {
+    throw new Error('User not found.');
+  }
+
+  // Tweets
+  const startTime = new Date(since).toISOString();
+  const { data: tweets, meta } = await fetchTweets(user.twitterAccessToken, userId, null, startTime);
+  console.log('[tweets]', tweets, meta);
+
+  if (meta.result_count > 0) {
+    // Search
+    const newAlbumTweets = searchTweets(tweets, [ album ]);
+    console.log('[new album tweets]', newAlbumTweets);
+
+    // Update albums
+    await updateAlbumsTweets(userId, newAlbumTweets);
+
+    // Update last tweet
+    await updateLastTweetId(userId, meta.newest_id);
+  }
 
   const body = JSON.stringify({ id });
   console.log('[response body]', body);
@@ -333,7 +358,7 @@ export const updateAlbums = async event => {
     console.log('[new album tweets]', newAlbumTweets);
 
     // Update albums
-    await updateAlbums(userId, newAlbumTweets);
+    await updateAlbumsTweets(userId, newAlbumTweets);
 
     // Update last tweet
     await updateLastTweetId(userId, meta.newest_id);
@@ -447,7 +472,7 @@ export const deleteAlbum = async event => {
   return { statusCode: 200, body };
 };
 
-async function updateAlbums(userId, newAlbumTweets) {
+async function updateAlbumsTweets(userId, newAlbumTweets) {
   for (const [ albumId, albumTweets ] of newAlbumTweets) {
     console.log('[album tweets]', albumTweets);
     await db.send(new UpdateCommand({
@@ -464,13 +489,16 @@ async function updateAlbums(userId, newAlbumTweets) {
   }
 }
 
-async function fetchTweets(accessToken, userId, lastTweetId) {
+async function fetchTweets(accessToken, userId, lastTweetId, startTime) {
   const params = new URLSearchParams();
   params.append('exclude', 'retweets,replies');
   params.append('expansions', 'author_id');
   params.append('max_results', 100);
   if (lastTweetId) {
     params.append('since_id', lastTweetId);
+  }
+  if (startTime) {
+    params.append('start_time', startTime);
   }
   console.log('[params]', params.toString());
 
@@ -490,6 +518,7 @@ async function fetchTweets(accessToken, userId, lastTweetId) {
 }
 
 function searchTweets(tweets, albums) {
+  console.log('[albums]', JSON.stringify(albums));
   let newAlbumTweets = new Map();
   for (const tweet of tweets) {
     console.log('[tweet]', tweet);
@@ -543,6 +572,29 @@ async function getSecrets() {
 
   const secrets = await response.json();
   return JSON.parse(secrets.SecretString);
+}
+
+async function getUser(userId) {
+  const { Item: user } = await db.send(new GetCommand({
+    TableName: usersTable,
+    Key: {
+      twitterUserId: userId,
+    },
+  }));
+  console.log('[user]', user);
+
+  if (user === undefined) {
+    return null;
+  }
+
+  // Refresh in good time
+  if (user.expirationTime < Date.now() + 5 * 60 * 1000) {
+    const tokens = await refreshAccessToken(user.twitterRefreshToken, userId, true);
+    user.twitterAccessToken = tokens.accessToken;
+    user.expirationTime = tokens.expirationTime;
+  }
+
+  return user;
 }
 
 async function updateLastTweetId(userId, lastTweetId) {

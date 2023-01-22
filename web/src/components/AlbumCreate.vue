@@ -6,13 +6,14 @@ import router from '../router';
 const apiUrl = API_URL;
 const { getAuthorizationHeader } = useUserStore();
 const keyword = ref('');
+const since = ref(new Date().toISOString().substring(0, '2010-11-06'.length));
 const disabled = ref(false);
 
 const onSubmit = async _ => {
   disabled.value = true;
 
   try {
-    const { id } = await createAlbum(keyword.value);
+    const { id } = await createAlbum(keyword.value, since.value);
     console.log('[album id]', id);
     keyword.value = '';
     const { userId, screenName } = useUserStore();
@@ -31,7 +32,7 @@ const onSubmit = async _ => {
   }
 };
 
-async function createAlbum(keyword) {
+async function createAlbum(keyword, since) {
   const authorizationHeader = getAuthorizationHeader();
   if (authorizationHeader == null) {
     throw new Error('Not authorized.');
@@ -44,6 +45,7 @@ async function createAlbum(keyword) {
     },
     body: JSON.stringify({
       keyword,
+      since,
     }),
   });
 
@@ -60,6 +62,7 @@ async function createAlbum(keyword) {
     <h2>アルバム作成</h2>
     <form @submit.prevent="onSubmit">
       <input type="text" v-model="keyword" placeholder="キーワード" required>
+      <input type="date" v-model="since" required>
       <input type="submit" value="作成" :disabled="disabled">
     </form>
   </section>
