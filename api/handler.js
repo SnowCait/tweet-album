@@ -287,13 +287,13 @@ export const updateAlbums = async event => {
   } = await db.send(new ScanCommand({
     TableName: albumsTable,
   }));
-  console.log('[albums]', count, scannedCount, allAlbums);
+  console.log('[all albums]', count, scannedCount, allAlbums);
 
   let usersAlbums = new Map();
   for (const album of allAlbums) {
     addListOnMap(usersAlbums, album.twitterUserId, album);
   }
-  console.log('[user albums]', usersAlbums);
+  console.log('[users albums]', usersAlbums);
 
   for (const user of users) {
     console.log('[user]', user);
@@ -315,8 +315,8 @@ export const updateAlbums = async event => {
 
     // Albums
     const albums = usersAlbums.get(userId);
+    console.log('[user albums]', albums);
     if (albums === undefined) {
-      console.log('[no keywords]');
       continue;
     }
 
