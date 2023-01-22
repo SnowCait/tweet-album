@@ -289,11 +289,11 @@ export const updateAlbums = async event => {
   }));
   console.log('[albums]', count, scannedCount, allAlbums);
 
-  let userAlbums = new Map();
+  let usersAlbums = new Map();
   for (const album of allAlbums) {
-    addListOnMap(userAlbums, album.twitterUserId, album);
+    addListOnMap(usersAlbums, album.twitterUserId, album);
   }
-  console.log('[user albums]', userAlbums);
+  console.log('[user albums]', usersAlbums);
 
   for (const user of users) {
     console.log('[user]', user);
@@ -311,8 +311,8 @@ export const updateAlbums = async event => {
       accessToken = tokens.accessToken;
     }
 
-    const keywords = userAlbums.get(userId);
-    if (keywords === undefined) {
+    const albums = usersAlbums.get(userId);
+    if (albums === undefined) {
       console.log('[no keywords]');
       continue;
     }
@@ -346,33 +346,7 @@ export const updateAlbums = async event => {
     }
 
     let newAlbumTweets = new Map();
-
-    for (const tweet of tweets) {
-      console.log('[tweet]', tweet);
-      const { id: tweetId, text } = tweet;
-      for (const { id: albumId, conditions } of keywords) {
-        console.log('[conditions]', albumId, conditions);
-
-        if (conditions === undefined) {
-          continue;
-        }
-
-        for (const { type, keyword } of conditions) {
-          switch (type) {
-            case Type.Keyword:
-              if (text.includes(keyword)) {
-                console.log('[match]', albumId, tweet);
-                addListOnMap(newAlbumTweets, albumId, tweetId);
-              }
-              break;
-            case Type.Regex:
-              throw new NotImplementedError('Regex type is not implemented.');
-            default:
-              throw new Error(`Undefined type: ${type}`);
-          }
-        }
-      }
-    }
+    searchTweets(tweets, albums, newAlbumTweets);
 
     console.log('[new album tweets]', newAlbumTweets);
 
@@ -501,6 +475,35 @@ export const deleteAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+function searchTweets(tweets, albums, newAlbumTweets) {
+  for (const tweet of tweets) {
+    console.log('[tweet]', tweet);
+    const { id: tweetId, text } = tweet;
+    for (const { id: albumId, conditions } of albums) {
+      console.log('[conditions]', albumId, conditions);
+
+      if (conditions === undefined) {
+        continue;
+      }
+
+      for (const { type, keyword } of conditions) {
+        switch (type) {
+          case Type.Keyword:
+            if (text.includes(keyword)) {
+              console.log('[match]', albumId, tweet);
+              addListOnMap(newAlbumTweets, albumId, tweetId);
+            }
+            break;
+          case Type.Regex:
+            throw new NotImplementedError('Regex type is not implemented.');
+          default:
+            throw new Error(`Undefined type: ${type}`);
+        }
+      }
+    }
+  }
+}
 
 function addListOnMap(map, key, value) {
   const list = map.get(key);
