@@ -298,6 +298,7 @@ export const updateAlbums = async event => {
   for (const user of users) {
     console.log('[user]', user);
 
+    // User
     const {
       twitterUserId: userId,
       twitterRefreshToken,
@@ -306,50 +307,34 @@ export const updateAlbums = async event => {
     } = user;
     let { twitterAccessToken: accessToken } = user;
 
+    // Access token
     if (expirationTime < Date.now()) {
       const tokens = await refreshAccessToken(twitterRefreshToken, userId);
       accessToken = tokens.accessToken;
     }
 
+    // Albums
     const albums = usersAlbums.get(userId);
     if (albums === undefined) {
       console.log('[no keywords]');
       continue;
     }
 
-    const params = new URLSearchParams();
-    params.append('exclude', 'retweets,replies')
-    params.append('expansions', 'author_id');
-    params.append('max_results', 100);
-    if (lastTweetId) {
-      params.append('since_id', lastTweetId);
-    }
-    console.log('[params]', params.toString());
-
-    const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!tweetsResponse.ok) {
-      throw new Error(await tweetsResponse.text());
-    }
-
-    const { data: tweets, meta } = await tweetsResponse.json();
+    // Tweets
+    const { data: tweets, meta } = await fetchTweets(accessToken, userId, lastTweetId);
     console.log('[tweets]', tweets, meta);
 
     if (meta.result_count === 0) {
       continue;
     }
 
+    // Search
     let newAlbumTweets = new Map();
     searchTweets(tweets, albums, newAlbumTweets);
 
     console.log('[new album tweets]', newAlbumTweets);
 
+    // Update albums
     for (const [ albumId, albumTweets ] of newAlbumTweets) {
       console.log('[album tweets]', albumTweets);
       await db.send(new UpdateCommand({
@@ -365,6 +350,7 @@ export const updateAlbums = async event => {
       }));
     }
 
+    // Update last tweet
     await updateLastTweetId(userId, meta.newest_id);
   }
 
@@ -475,6 +461,31 @@ export const deleteAlbum = async event => {
   console.log('[response body]', body);
   return { statusCode: 200, body };
 };
+
+async function fetchTweets(accessToken, userId, lastTweetId) {
+  const params = new URLSearchParams();
+  params.append('exclude', 'retweets,replies');
+  params.append('expansions', 'author_id');
+  params.append('max_results', 100);
+  if (lastTweetId) {
+    params.append('since_id', lastTweetId);
+  }
+  console.log('[params]', params.toString());
+
+  const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!tweetsResponse.ok) {
+    throw new Error(await tweetsResponse.text());
+  }
+
+  return await tweetsResponse.json();;
+}
 
 function searchTweets(tweets, albums, newAlbumTweets) {
   for (const tweet of tweets) {
