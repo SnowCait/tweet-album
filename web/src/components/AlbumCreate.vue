@@ -61,8 +61,14 @@ async function createAlbum(keyword, since) {
   <section>
     <h2>アルバム作成</h2>
     <form @submit.prevent="onSubmit">
-      <input type="text" v-model="keyword" placeholder="キーワード" required>
-      <input type="date" v-model="since" required>
+      <div>
+        <label for="keyword">キーワード: </label>
+        <input type="text" id="keyword" v-model="keyword" placeholder="キーワード" required>
+      </div>
+      <div>
+        <label for="since">いつから: </label>
+        <input type="date" id="since" v-model="since" required>～
+      </div>
       <input type="submit" value="作成" :disabled="disabled">
     </form>
   </section>
