@@ -1,5 +1,4 @@
 <script setup>
-import AlbumCreate from '../components/AlbumCreate.vue'
 import AlbumList from '../components/AlbumList.vue'
 import Logout from '../components/Logout.vue';
 </script>
@@ -11,7 +10,6 @@ import Logout from '../components/Logout.vue';
     </header>
     <main>
       <h1>@{{ $route.params.screenName }} のアルバム</h1>
-      <AlbumCreate />
       <AlbumList />
     </main>
   </div>

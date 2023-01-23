@@ -76,8 +76,8 @@ async function fetchAlbumArchive(userId, albumId) {
 </script>
 
 <template>
+  <h1>{{ title }}</h1>
   <section>
-    <h1>{{ title }}</h1>
     <ul>
       <li v-for="tweet in tweets">
         <Tweet :tweet="tweet" :user="users.find(x => x.id === tweet.author_id)"/>

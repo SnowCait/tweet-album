@@ -60,7 +60,7 @@ async function createAlbum(keyword, since) {
 <template>
   <section>
     <h2>アルバム作成</h2>
-    <form @submit.prevent="onSubmit">
+    <form method="dialog" @submit.prevent="onSubmit">
       <div>
         <label for="keyword">キーワード: </label>
         <input type="text" id="keyword" v-model="keyword" placeholder="キーワード" required>
