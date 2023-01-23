@@ -49,7 +49,7 @@ async function deleteAlbum(albumId) {
 </script>
 
 <template>
-  <form @submit.prevent="onSubmit">
+  <form @submit.prevent="onSubmit" @click.stop="">
     <input type="submit" value="🗑️" :disabled="disabled" />
   </form>
 </template>
