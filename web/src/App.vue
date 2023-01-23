@@ -1,7 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import HelloWorld from './components/HelloWorld.vue'
 import Menu from './components/Menu.vue';
 
 const { fetchMe } = useUserStore();
@@ -10,15 +9,11 @@ fetchMe();
 
 <template>
   <header>
-    <img alt="logo" class="logo" src="@/assets/logo.png" />
+    <RouterLink to="/">
+      <img alt="logo" class="logo" src="@/assets/logo.png" />
+    </RouterLink>
 
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
       <Menu />
     </div>
   </header>
