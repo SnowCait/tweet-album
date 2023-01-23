@@ -372,7 +372,7 @@ export const showAlbum = async event => {
   console.log('[request path parameters]', event.pathParameters);
 
   const { albumId } = event.pathParameters;
-  const { userId, accessToken } = event.requestContext.authorizer.lambda;
+  const { userId } = event.requestContext.authorizer.lambda;
 
   const { Item: album } = await db.send(new GetCommand({
     TableName: albumsTable,
@@ -389,6 +389,11 @@ export const showAlbum = async event => {
     return { statusCode: 200, body };
   }
 
+  const user = await getUser(userId);
+  if (user === null) {
+    throw new Error('User not found.');
+  }
+
   const params = new URLSearchParams();
   params.append('ids', [...album.tweets])
   params.append('expansions', 'author_id,attachments.media_keys');
@@ -400,7 +405,7 @@ export const showAlbum = async event => {
   const response = await fetch(`https://api.twitter.com/2/tweets?${params.toString()}`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${user.twitterAccessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -592,6 +597,7 @@ async function getUser(userId) {
     const tokens = await refreshAccessToken(user.twitterRefreshToken, userId, true);
     user.twitterAccessToken = tokens.accessToken;
     user.expirationTime = tokens.expirationTime;
+    console.log('[user refreshed]', user);
   }
 
   return user;
