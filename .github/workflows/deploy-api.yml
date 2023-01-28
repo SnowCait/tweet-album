@@ -32,5 +32,6 @@ jobs:
         working-directory: api
         env:
           NODE_ENV: production
+      - run: npm ls
       - run: serverless deploy --verbose
         working-directory: api
