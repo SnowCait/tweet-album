@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user'
 import AlbumCreate from '../components/AlbumCreate.vue'
@@ -8,11 +8,12 @@ import AlbumDelete from '../components/AlbumDelete.vue'
 const { loggedIn, fetchUserBy } = useUserStore();
 
 const apiUrl = API_URL;
+const limit = ALBUMS_LIMIT;
 const { screenName } = useRoute().params;
 const userId = ref('');
 const userName = ref('');
 const albums = ref([]);
-const title = ref('');
+const creatable = computed(() => albums.value.filter(album => album.deletionTime === undefined).length < limit);
 
 run();
 
@@ -66,7 +67,7 @@ async function cancel(event) {
     <ul id="albums" class="albums">
       <li>
         <div class="book-cover create">
-          <button @click="create">＋</button>
+          <button @click="create" :disabled="!creatable">＋</button>
         </div>
       </li>
       <li v-for="album in albums">
