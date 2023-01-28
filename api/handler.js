@@ -181,10 +181,11 @@ export const createAlbum = async event => {
   const { Count: count, ScannedCount } = await db.send(new QueryCommand({
     TableName: albumsTable,
     KeyConditionExpression: 'twitterUserId = :twitterUserId',
+    FilterExpression: 'archived = :archived AND attribute_not_exists(deletionTime)',
     ExpressionAttributeValues: {
       ':twitterUserId': userId,
+      ':archived': false,
     },
-    FilterExpression: 'attribute_not_exists(deletionTime)',
     Select: 'COUNT',
   }));
   console.log('[count]', `Count: ${count}`, `ScannedCount: ${ScannedCount}`, `Limit: ${albumsLimit}`);
@@ -206,6 +207,7 @@ export const createAlbum = async event => {
         keyword,
       },
     ],
+    archived: false,
   };
   await db.send(new PutCommand({
     TableName: albumsTable,
@@ -287,6 +289,10 @@ export const updateAlbums = async event => {
     ScannedCount: scannedCount
   } = await db.send(new ScanCommand({
     TableName: albumsTable,
+    FilterExpression: 'archived = :archived AND attribute_not_exists(deletionTime)',
+    ExpressionAttributeValues: {
+      ':archived': false,
+    },
   }));
   console.log('[all albums]', count, scannedCount, allAlbums);
 
