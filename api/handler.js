@@ -426,6 +426,28 @@ export const showUserAlbum = async event => {
   return { statusCode: 200, body };
 };
 
+export const archiveAlbum = async event => {
+  console.log('[event]', event);
+  console.log('[request path parameters]', event.pathParameters);
+
+  const { albumId } = event.pathParameters;
+  const { userId } = event.requestContext.authorizer.lambda;
+
+  await db.send(new UpdateCommand({
+    TableName: albumsTable,
+    Key: {
+      twitterUserId: userId,
+      id: Number(albumId),
+    },
+    UpdateExpression: 'SET archived = :archived',
+    ExpressionAttributeValues: {
+      ':archived': true,
+    },
+  }));
+
+  return { statusCode: 204 };
+};
+
 export const deleteAlbum = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);

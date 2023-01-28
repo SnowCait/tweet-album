@@ -124,6 +124,14 @@ functions:
       - httpApi:
           method: GET
           path: /users/{userId}/albums/{albumId}
+  archiveAlbum:
+    handler: handler.archiveAlbum
+    events:
+      - httpApi:
+          method: PUT
+          path: /albums/{albumId}/archive
+          authorizer:
+            name: twitterAuthorizer
   deleteAlbum:
     handler: handler.deleteAlbum
     events:
