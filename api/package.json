@@ -2,5 +2,9 @@
   "type": "module",
   "dependencies": {
     "octokit": "^2.0.10"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.259.0",
+    "@aws-sdk/lib-dynamodb": "^3.259.0"
   }
 }
