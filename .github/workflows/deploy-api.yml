@@ -19,20 +19,21 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    env:
+      NODE_ENV: production
     defaults:
       run:
         working-directory: api
 
     steps:
+      - run: cat $GITHUB_EVENT_PATH
+        working-directory: .
       - uses: actions/checkout@v3
       - uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ap-northeast-1
-      - run: cat $GITHUB_EVENT_PATH
-      - run: npm install -g serverless
       - run: npm ci
-        env:
-          NODE_ENV: production
       - run: npm ls
+      - run: npm install -g serverless
       - run: serverless deploy --verbose
