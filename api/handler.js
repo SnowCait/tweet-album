@@ -206,6 +206,8 @@ export const showUserByScreenName = async event => {
 
   const body = JSON.stringify({
     userId: user?.twitterUserId,
+    userName: user?.twitterName,
+    screenName: user?.twitterScreenName,
   });
   console.log('[response body]', body);
   return { statusCode: 200, body };

@@ -22,6 +22,8 @@ async function run() {
   title.value = album.title;
   tweets.value = album.tweets;
   users.value = album.includes.users;
+
+  document.title = title.value;
 }
 
 async function fetchMyAlbum(albumId) {

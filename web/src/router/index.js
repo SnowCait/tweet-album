@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +20,10 @@ const router = createRouter({
       component: () => import('../views/AlbumView.vue')
     },
   ]
-})
+});
 
-export default router
+router.afterEach((to, from) => {
+  document.title = 'Tweet Album';
+});
+
+export default router;

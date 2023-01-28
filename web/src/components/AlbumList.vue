@@ -10,7 +10,9 @@ const { loggedIn, fetchUserBy } = useUserStore();
 const apiUrl = API_URL;
 const { screenName } = useRoute().params;
 const userId = ref('');
+const userName = ref('');
 const albums = ref([]);
+const title = ref('');
 
 run();
 
@@ -18,7 +20,10 @@ async function run() {
   const user = await fetchUserBy(screenName);
   const data = await fetchAlbums(user.userId);
   userId.value = user.userId;
+  userName.value = user.userName;
   albums.value = data.albums;
+
+  document.title = `${user.userName} (@${user.screenName}) のアルバム`;
 }
 
 async function fetchAlbums(userId) {
@@ -56,6 +61,7 @@ async function cancel(event) {
 </script>
 
 <template>
+  <h1>{{ userName }}のアルバム</h1>
   <section>
     <ul id="albums" class="albums">
       <li>

@@ -9,7 +9,6 @@ import Logout from '../components/Logout.vue';
       <Logout />
     </header>
     <main>
-      <h1>@{{ $route.params.screenName }} のアルバム</h1>
       <AlbumList />
     </main>
   </div>
