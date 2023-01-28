@@ -14,7 +14,9 @@ const { screenName } = useRoute().params;
 const userId = ref('');
 const userName = ref('');
 const albums = ref([]);
-const creatable = computed(() => albums.value.filter(album => album.deletionTime === undefined).length < limit);
+const creatable = computed(() =>
+  albums.value.filter(album => !album.archived && album.deletionTime === undefined).length < limit
+);
 
 run();
 
