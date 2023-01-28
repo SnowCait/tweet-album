@@ -53,7 +53,7 @@ provider:
 
 functions:
   authorizer:
-    handler: handler.authorizer
+    handler: handlers/authorizer.authorizer
   hello:
     handler: handler.hello
     events:
