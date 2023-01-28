@@ -65,7 +65,7 @@ async function createAlbum(keyword, since) {
         <label for="keyword">キーワード: </label>
         <input type="text" id="keyword" v-model="keyword" placeholder="キーワード" required>
       </div>
-      <div>
+      <div class="since-input">
         <label for="since">いつから: </label>
         <input type="date" id="since" v-model="since" required>～
       </div>
@@ -75,4 +75,7 @@ async function createAlbum(keyword, since) {
 </template>
 
 <style scoped>
+.since-input {
+  display: none;
+}
 </style>
