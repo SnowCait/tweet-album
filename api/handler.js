@@ -20,6 +20,7 @@ const {
   users_table: usersTable,
   albums_table: albumsTable,
 } = process.env;
+const albumsLimit = Number(process.env.albums_limit);
 
 export const hello = async event => {
   return {
@@ -176,6 +177,22 @@ export const createAlbum = async event => {
 
   const { keyword, since } = JSON.parse(event.body);
   const { userId } = event.requestContext.authorizer.lambda;
+
+  const { Count: count, ScannedCount } = await db.send(new QueryCommand({
+    TableName: albumsTable,
+    KeyConditionExpression: 'twitterUserId = :twitterUserId',
+    ExpressionAttributeValues: {
+      ':twitterUserId': userId,
+    },
+    FilterExpression: 'attribute_not_exists(deletionTime)',
+    Select: 'COUNT',
+  }));
+  console.log('[count]', `Count: ${count}`, `ScannedCount: ${ScannedCount}`, `Limit: ${albumsLimit}`);
+
+  if (count >= albumsLimit) {
+    console.error('[limit]', `${count} >= ${albumsLimit}`);
+    return { statusCode: 422 };
+  }
 
   const id = Date.now();
 

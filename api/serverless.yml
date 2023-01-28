@@ -50,6 +50,7 @@ provider:
       Ref: UsersTable
     albums_table:
       Ref: AlbumsTable
+    albums_limit: 3
 
 functions:
   authorizer:
