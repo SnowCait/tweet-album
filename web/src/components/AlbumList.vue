@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useUserStore } from '@/stores/user'
-import AlbumCreate from '../components/AlbumCreate.vue'
-import AlbumDelete from '../components/AlbumDelete.vue'
+import { useUserStore } from '@/stores/user';
+import AlbumCreate from './AlbumCreate.vue';
+import AlbumArchive from './AlbumArchive.vue';
+import AlbumDelete from './AlbumDelete.vue';
 
 const { loggedIn, fetchUserBy } = useUserStore();
 
@@ -74,6 +75,7 @@ async function cancel(event) {
         <RouterLink :to="{ name: 'album', params: { screenName, userId, albumId: album.id } }" v-if="!album.deletionTime">
           <div class="book-cover">
             <div class="title">{{ album.title }}</div>
+            <AlbumArchive :album="album" v-if="loggedIn && !album.archived" />
             <AlbumDelete :album="album" v-if="loggedIn" />
           </div>
         </RouterLink>
