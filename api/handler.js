@@ -384,7 +384,8 @@ export const showAlbum = async event => {
   console.log('[album]', album);
 
   if (!album.tweets) {
-    const body = JSON.stringify({ tweets: [], includes: [] });
+    console.log('[no tweets]');
+    const body = JSON.stringify({ title: album.title, tweets: [], includes: [] });
     console.log('[response body]', body);
     return { statusCode: 200, body };
   }
