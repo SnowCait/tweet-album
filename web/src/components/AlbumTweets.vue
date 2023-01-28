@@ -25,6 +25,7 @@ async function run() {
 }
 
 async function fetchMyAlbum(albumId) {
+  console.log('[my album]');
   const authorizationHeader = getAuthorizationHeader();
   if (authorizationHeader === null) {
     throw new Error('Not authorized.');
@@ -57,6 +58,7 @@ async function fetchAlbumTitle(userId, albumId) {
 }
 
 async function fetchAlbumArchive(userId, albumId) {
+  console.log('[archived album]');
   const url = 'https://snowcait.github.io/tweet-album-api/api'
   const response = await fetch(`${url}/${userId}/${albumId}.json`);
 
