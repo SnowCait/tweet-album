@@ -482,6 +482,18 @@ export const deleteAlbum = async event => {
   return { statusCode: 200, body };
 };
 
+export const refresh = async event => {
+  console.log('[event]', event);
+
+  const { user } = event.requestContext.authorizer.lambda;
+
+  const newToken = await refreshAccessToken(user.twitterRefreshToken, user.twitterUserId, true);
+
+  const body = JSON.stringify({ ...newToken });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};
+
 async function updateAlbumsTweets(userId, newAlbumTweets) {
   for (const [ albumId, albumTweets ] of newAlbumTweets) {
     console.log('[album tweets]', albumTweets);
