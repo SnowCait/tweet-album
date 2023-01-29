@@ -79,16 +79,6 @@ functions:
           path: /refresh
           authorizer:
             name: twitterAuthorizer
-  showMe:
-    handler: handler.showMe
-    layers:
-      - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:2
-    events:
-      - httpApi:
-          method: GET
-          path: /users/me
-          authorizer:
-            name: twitterAuthorizer
   showUserByScreenName:
     handler: handler.showUserByScreenName
     events:

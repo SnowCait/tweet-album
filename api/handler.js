@@ -111,41 +111,6 @@ export const auth = async event => {
   return { statusCode: 200, body };
 };
 
-export const showMe = async event => {
-  console.log('[event]', event);
-
-  const { userId } = event.requestContext.authorizer.lambda;
-
-  const { Item: user } = await db.send(new GetCommand({
-    TableName: usersTable,
-    Key: {
-      twitterUserId: userId,
-    },
-  }));
-  console.log('[user]', user);
-
-  if (user === undefined) {
-    throw new Error('User not found.');
-  }
-
-  let tokens = null;
-  if (user.expirationTime < Date.now()) {
-    tokens = await refreshAccessToken(user.twitterRefreshToken, userId, true);
-  }
-
-  const body = JSON.stringify({
-    userId: user.twitterUserId,
-    screenName: user.twitterScreenName,
-    name: user.twitterName,
-    profileImageUrl: user.twitterProfileImageUrl,
-    accessToken: user.twitterAccessToken,
-    expirationTime: user.expirationTime,
-    ...tokens,
-  });
-  console.log('[response body]', body);
-  return { statusCode: 200, body };
-};
-
 export const showUserByScreenName = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
