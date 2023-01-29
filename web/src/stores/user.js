@@ -9,9 +9,9 @@ export const useUserStore = defineStore('user', () => {
 
   // State
   const user = ref(JSON.parse(json));
-  const userId = ref('');
-  const userName = ref('');
-  const screenName = ref('');
+  const userId = ref(user.value.userId);
+  const userName = ref(user.value.name);
+  const screenName = ref(user.value.screenName);
 
   // Getters
   const loggedIn = computed(() => user.value !== null);
