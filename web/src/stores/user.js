@@ -31,33 +31,6 @@ export const useUserStore = defineStore('user', () => {
     };
   }
 
-  const fetchMe = async () => {
-    const authorizationHeader = getAuthorizationHeader();
-    if (authorizationHeader === null) {
-      return null;
-    }
-
-    const response = await fetch(`${apiUrl}/users/me`, {
-      method: 'GET',
-      headers: {
-        ...authorizationHeader,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Cannot get user.');
-    }
-
-   const me = await response.json();
-   console.log('[me]', me);
-   localStorage.setItem('user', JSON.stringify(me));
-   user.value = me;
-   userId.value = me.userId;
-   userName.value = me.name;
-   screenName.value = me.screenName;
-   return me;
-  };
-
   const fetchUserBy = async screenName => {
     const response = await fetch(`${apiUrl}/users/by/${screenName}`, {
       method: 'GET',
@@ -87,7 +60,6 @@ export const useUserStore = defineStore('user', () => {
     screenName,
     loggedIn,
     getAuthorizationHeader,
-    fetchMe,
     fetchUserBy,
     logout,
   };
