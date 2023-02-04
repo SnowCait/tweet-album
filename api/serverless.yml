@@ -156,7 +156,7 @@ resources:
     UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-users-${sls:stage}
+        TableName: ${self:service}-${sls:stage}-users
         AttributeDefinitions:
           - AttributeName: twitterUserId
             AttributeType: S
@@ -182,7 +182,7 @@ resources:
     AlbumsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-albums-${sls:stage}
+        TableName: ${self:service}-${sls:stage}-albums
         AttributeDefinitions:
           - AttributeName: twitterUserId
             AttributeType: S
