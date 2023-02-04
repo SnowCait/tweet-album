@@ -3,14 +3,15 @@ import { defineStore } from 'pinia'
 import { computed } from '@vue/reactivity';
 
 export const useUserStore = defineStore('user', () => {
+  console.log('[user store]');
   const apiUrl = API_URL;
   const json = localStorage.getItem('user');
 
   // State
   const user = ref(JSON.parse(json));
-  const userId = ref('');
-  const userName = ref('');
-  const screenName = ref('');
+  const userId = ref(user.value.userId);
+  const userName = ref(user.value.name);
+  const screenName = ref(user.value.screenName);
 
   // Getters
   const loggedIn = computed(() => user.value !== null);
@@ -31,33 +32,6 @@ export const useUserStore = defineStore('user', () => {
     };
   }
 
-  const fetchMe = async () => {
-    const authorizationHeader = getAuthorizationHeader();
-    if (authorizationHeader === null) {
-      return null;
-    }
-
-    const response = await fetch(`${apiUrl}/users/me`, {
-      method: 'GET',
-      headers: {
-        ...authorizationHeader,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Cannot get user.');
-    }
-
-   const me = await response.json();
-   console.log('[me]', me);
-   localStorage.setItem('user', JSON.stringify(me));
-   user.value = me;
-   userId.value = me.userId;
-   userName.value = me.name;
-   screenName.value = me.screenName;
-   return me;
-  };
-
   const fetchUserBy = async screenName => {
     const response = await fetch(`${apiUrl}/users/by/${screenName}`, {
       method: 'GET',
@@ -70,6 +44,41 @@ export const useUserStore = defineStore('user', () => {
    return await response.json();
   };
 
+  const refreshAccessToken = async () => {
+    console.log('[refresh access token]');
+    const authorizationHeader = getAuthorizationHeader();
+    if (authorizationHeader == null) {
+      throw new Error('Not authorized.');
+    }
+
+    const response = await fetch(`${apiUrl}/refresh`, {
+      method: 'POST',
+      headers: {
+        ...authorizationHeader,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const token = await response.json();
+
+    const json = localStorage.getItem('user');
+    const me = JSON.parse(json);
+    console.log('[user before]', me);
+    me.accessToken = token.accessToken;
+    me.expirationTime = token.expirationTime;
+    console.log('[user after]', me);
+    localStorage.setItem('user', JSON.stringify(me));
+    user.value = me;
+    userId.value = me.userId;
+    userName.value = me.name;
+    screenName.value = me.screenName;
+
+    setTimer();
+  }
+
   const logout = () => {
     console.log('[logout]');
     localStorage.clear();
@@ -80,6 +89,17 @@ export const useUserStore = defineStore('user', () => {
     location.reload(); // Workaround for updating user store
   };
 
+  // Background
+  const setTimer = () => {
+    console.log('[expired at]', user.value.expirationTime, new Date(user.value.expirationTime));
+    const goodTime = user.value.expirationTime - 5 * 60 * 1000;
+    const delay = goodTime - Date.now();
+    setTimeout(refreshAccessToken, delay);
+  };
+  if (user.value) {
+    setTimer();
+  }
+
   return {
     user,
     userId,
@@ -87,7 +107,6 @@ export const useUserStore = defineStore('user', () => {
     screenName,
     loggedIn,
     getAuthorizationHeader,
-    fetchMe,
     fetchUserBy,
     logout,
   };

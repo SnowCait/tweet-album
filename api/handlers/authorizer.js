@@ -51,6 +51,7 @@ export const authorizer = async event => {
   const response = {
     isAuthorized,
     context: {
+      user,
       userId,
       accessToken,
     },

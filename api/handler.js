@@ -111,41 +111,6 @@ export const auth = async event => {
   return { statusCode: 200, body };
 };
 
-export const showMe = async event => {
-  console.log('[event]', event);
-
-  const { userId } = event.requestContext.authorizer.lambda;
-
-  const { Item: user } = await db.send(new GetCommand({
-    TableName: usersTable,
-    Key: {
-      twitterUserId: userId,
-    },
-  }));
-  console.log('[user]', user);
-
-  if (user === undefined) {
-    throw new Error('User not found.');
-  }
-
-  let tokens = null;
-  if (user.expirationTime < Date.now()) {
-    tokens = await refreshAccessToken(user.twitterRefreshToken, userId, true);
-  }
-
-  const body = JSON.stringify({
-    userId: user.twitterUserId,
-    screenName: user.twitterScreenName,
-    name: user.twitterName,
-    profileImageUrl: user.twitterProfileImageUrl,
-    accessToken: user.twitterAccessToken,
-    expirationTime: user.expirationTime,
-    ...tokens,
-  });
-  console.log('[response body]', body);
-  return { statusCode: 200, body };
-};
-
 export const showUserByScreenName = async event => {
   console.log('[event]', event);
   console.log('[request path parameters]', event.pathParameters);
@@ -176,7 +141,7 @@ export const createAlbum = async event => {
   console.log('[request body]', event.body);
 
   const { keyword, since } = JSON.parse(event.body);
-  const { userId } = event.requestContext.authorizer.lambda;
+  const { user, userId } = event.requestContext.authorizer.lambda;
 
   const { Count: count, ScannedCount } = await db.send(new QueryCommand({
     TableName: albumsTable,
@@ -213,13 +178,6 @@ export const createAlbum = async event => {
     TableName: albumsTable,
     Item: album,
   }));
-
-  // User
-  const user = await getUser(userId);
-  console.log('[user]', user);
-  if (user === null) {
-    throw new Error('User not found.');
-  }
 
   // Tweets
   const startTime = new Date(since).toISOString();
@@ -354,7 +312,7 @@ export const showAlbum = async event => {
   console.log('[request path parameters]', event.pathParameters);
 
   const { albumId } = event.pathParameters;
-  const { userId } = event.requestContext.authorizer.lambda;
+  const { user, userId } = event.requestContext.authorizer.lambda;
 
   const { Item: album } = await db.send(new GetCommand({
     TableName: albumsTable,
@@ -370,11 +328,6 @@ export const showAlbum = async event => {
     const body = JSON.stringify({ title: album.title, tweets: [], includes: [] });
     console.log('[response body]', body);
     return { statusCode: 200, body };
-  }
-
-  const user = await getUser(userId);
-  if (user === null) {
-    throw new Error('User not found.');
   }
 
   const params = new URLSearchParams();
@@ -482,6 +435,18 @@ export const deleteAlbum = async event => {
   return { statusCode: 200, body };
 };
 
+export const refresh = async event => {
+  console.log('[event]', event);
+
+  const { user } = event.requestContext.authorizer.lambda;
+
+  const newToken = await refreshAccessToken(user.twitterRefreshToken, user.twitterUserId, true);
+
+  const body = JSON.stringify({ ...newToken });
+  console.log('[response body]', body);
+  return { statusCode: 200, body };
+};
+
 async function updateAlbumsTweets(userId, newAlbumTweets) {
   for (const [ albumId, albumTweets ] of newAlbumTweets) {
     console.log('[album tweets]', albumTweets);
@@ -582,30 +547,6 @@ async function getSecrets() {
 
   const secrets = await response.json();
   return JSON.parse(secrets.SecretString);
-}
-
-async function getUser(userId) {
-  const { Item: user } = await db.send(new GetCommand({
-    TableName: usersTable,
-    Key: {
-      twitterUserId: userId,
-    },
-  }));
-  console.log('[user]', user);
-
-  if (user === undefined) {
-    return null;
-  }
-
-  // Refresh in good time
-  if (user.expirationTime < Date.now() + 5 * 60 * 1000) {
-    const tokens = await refreshAccessToken(user.twitterRefreshToken, userId, true);
-    user.twitterAccessToken = tokens.accessToken;
-    user.expirationTime = tokens.expirationTime;
-    console.log('[user refreshed]', user);
-  }
-
-  return user;
 }
 
 async function updateLastTweetId(userId, lastTweetId) {

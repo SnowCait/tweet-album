@@ -1,10 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import { useUserStore } from '@/stores/user'
 import Menu from './components/Menu.vue';
-
-const { fetchMe } = useUserStore();
-fetchMe();
 </script>
 
 <template>
